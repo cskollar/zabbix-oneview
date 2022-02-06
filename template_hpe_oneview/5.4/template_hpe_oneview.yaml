@@ -1,6 +1,6 @@
 zabbix_export:
   version: '5.2'
-  date: '2022-02-06T12:37:15Z'
+  date: '2022-02-06T13:28:12Z'
   groups:
     -
       name: 'Discovered hosts'
@@ -70,14 +70,13 @@ zabbix_export:
                     throw 'Response code: '+req.Status();
                 }
                 resp = JSON.parse(resp);
-                for (var i = 0; i < resp.members.length; i++) {
-                       var alerts = {
-                            id: dataresp.members[i].uri.replace("\/rest\/alerts\/",""),
-                            description: dataresp.members[i].description,
-                            severity: dataresp.members[i].severity
-                       };
-                    result.push(alerts);
-                }
+                result = resp.members.map(function(m) {
+                    return {
+                        id: m.uri.replace("\/rest\/alerts\/",""),
+                        description: m.description,
+                        severity: m.severity
+                     };
+                });
             
                 //DELETE token
                 resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
@@ -106,6 +105,7 @@ zabbix_export:
           type: SCRIPT
           key: oneview.get.enclosures
           delay: 5m
+          history: '0'
           trends: '0'
           value_type: TEXT
           params: |
@@ -130,14 +130,13 @@ zabbix_export:
                     throw 'Response code: '+req.Status();
                 }
                 resp = JSON.parse(resp);
-                for (var i = 0; i < resp.members.length; i++) {
-                       var enclosures = {
-                            uri: resp.members[i].uri,
-                            uuid: resp.members[i].uuid,
-                            name: resp.members[i].name
-                       }; 
-                       result.push(enclosures);
-                }
+                result = resp.members.map(function(m) {
+                    return {
+                        uri: m.uri,
+                        uuid: m.uuid,
+                        name: m.name
+                     };
+                });
             
                 //DELETE token
                 resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
@@ -192,14 +191,13 @@ zabbix_export:
                     throw 'Response code: '+req.Status();
                 }
                 resp = JSON.parse(resp);
-                for (var i = 0; i < resp.members.length; i++) {
-                       var servers = {
-                            uri: resp.members[i].uri,
-                            name: resp.members[i].name.replace(", "," - "),
-                            model: resp.members[i].model,
-                       }; 
-                       result.push(servers);
-                }
+                result = resp.members.map(function(m) {
+                    return {
+                        uri: m.uri,
+                        name: m.name.replace(", "," - "),
+                        model: m.model
+                     };
+                });
             
                 //DELETE token
                 resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
