@@ -1,6 +1,6 @@
 zabbix_export:
   version: '5.2'
-  date: '2022-02-06T16:27:23Z'
+  date: '2022-02-06T21:24:49Z'
   groups:
     -
       name: 'Discovered hosts'
@@ -629,7 +629,7 @@ zabbix_export:
             -
               name: 'OneView Enclosure: Appliance Bay{#ENCLOSURE_APPLIANCE_BAY} {#ENCLOSURE_APPLIANCE_MODEL} Power State'
               type: DEPENDENT
-              key: 'appliance.bay.power.[{#ENCLOSURE_APPLIANCE_BAY}]'
+              key: 'appliance.power.bay[{#ENCLOSURE_APPLIANCE_BAY}]'
               delay: '0'
               trends: '0'
               value_type: TEXT
@@ -649,7 +649,7 @@ zabbix_export:
             -
               name: 'OneView Enclosure: Appliance Bay{#ENCLOSURE_APPLIANCE_BAY} {#ENCLOSURE_APPLIANCE_MODEL} Presence'
               type: DEPENDENT
-              key: 'appliance.bay.presence.[{#ENCLOSURE_APPLIANCE_BAY}]'
+              key: 'appliance.presence.bay[{#ENCLOSURE_APPLIANCE_BAY}]'
               delay: '0'
               trends: '0'
               value_type: TEXT
@@ -663,7 +663,7 @@ zabbix_export:
             -
               name: 'OneView Enclosure: Appliance Bay{#ENCLOSURE_APPLIANCE_BAY} {#ENCLOSURE_APPLIANCE_MODEL} Status'
               type: DEPENDENT
-              key: 'appliance.bay.status.[{#ENCLOSURE_APPLIANCE_BAY}]'
+              key: 'appliance.status.bay[{#ENCLOSURE_APPLIANCE_BAY}]'
               delay: '0'
               trends: '0'
               value_type: TEXT
@@ -706,7 +706,7 @@ zabbix_export:
             -
               name: 'OneView Enclosure: FAN Bay{#ENCLOSURE_FAN_BAY} Presence'
               type: DEPENDENT
-              key: 'fan.bay.presence.[{#ENCLOSURE_FAN_BAY}]'
+              key: 'fan.presence.bay[{#ENCLOSURE_FAN_BAY}]'
               delay: '0'
               trends: '0'
               value_type: CHAR
@@ -720,7 +720,7 @@ zabbix_export:
             -
               name: 'OneView Enclosure: FAN Bay{#ENCLOSURE_FAN_BAY} Status'
               type: DEPENDENT
-              key: 'fan.bay.status.[{#ENCLOSURE_FAN_BAY}]'
+              key: 'fan.status.bay[{#ENCLOSURE_FAN_BAY}]'
               delay: '0'
               trends: '0'
               value_type: CHAR
@@ -750,6 +750,270 @@ zabbix_export:
               parameters:
                 - $.fanBays
         -
+          name: 'Enclosure interconnect bays discovery'
+          type: DEPENDENT
+          key: enclosure.interconnect.disovery
+          delay: '0'
+          filter:
+            conditions:
+              -
+                macro: '{#ENCLOSURE_INTERCONNECT_URI}'
+                value: '^(?![nN][uU][lL]{2}$)\s*\S.*'
+                formulaid: A
+          item_prototypes:
+            -
+              name: 'Interconnect BAY{#ENCLOSURE_INTERCONNECT_BAY} model'
+              type: SCRIPT
+              key: 'get.interconnect.model.bay[{#ENCLOSURE_INTERCONNECT_BAY}]'
+              delay: 3m
+              trends: '0'
+              value_type: TEXT
+              params: |
+                try {
+                    var result = [],
+                    req = new CurlHttpRequest(),
+                    resp;
+                    req.AddHeader('content-type: application/json');
+                    req.AddHeader('x-api-version: 3000');
+                
+                    //GET Token
+                    resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
+                    if (req.Status() != 200) {
+                        throw 'Response code: '+req.Status();
+                    }
+                    resp = JSON.parse(resp);
+                    token = resp.sessionID;
+                
+                    //GET Enclosure
+                    req.AddHeader('auth: '+token);
+                    resp = req.Get('https://{$ONEVIEW_HOST}/{#ENCLOSURE_INTERCONNECT_URI}');
+                    if (req.Status() != 200) {
+                        throw 'Response code: '+req.Status();
+                    }
+                    result = JSON.parse(resp);
+                
+                    //DELETE token
+                    resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
+                    if (req.Status() != 204) {
+                        throw 'Response code: '+req.Status();
+                    }
+                 
+                } catch (error) {
+                    Zabbix.Log(4, 'OneView api error: '+error);
+                    result = {
+                        failed: error
+                    };
+                }
+                
+                //RESULT
+                return JSON.stringify(result);
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.model
+              parameters:
+                -
+                  name: password
+                  value: '{$ONEVIEW_PASS}'
+                -
+                  name: userName
+                  value: '{$ONEVIEW_USER}'
+            -
+              name: 'Interconnect BAY{#ENCLOSURE_INTERCONNECT_BAY} name'
+              type: SCRIPT
+              key: 'get.interconnect.namel.bay[{#ENCLOSURE_INTERCONNECT_BAY}]'
+              delay: 3m
+              trends: '0'
+              value_type: TEXT
+              params: |
+                try {
+                    var result = [],
+                    req = new CurlHttpRequest(),
+                    resp;
+                    req.AddHeader('content-type: application/json');
+                    req.AddHeader('x-api-version: 3000');
+                
+                    //GET Token
+                    resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
+                    if (req.Status() != 200) {
+                        throw 'Response code: '+req.Status();
+                    }
+                    resp = JSON.parse(resp);
+                    token = resp.sessionID;
+                
+                    //GET Enclosure
+                    req.AddHeader('auth: '+token);
+                    resp = req.Get('https://{$ONEVIEW_HOST}/{#ENCLOSURE_INTERCONNECT_URI}');
+                    if (req.Status() != 200) {
+                        throw 'Response code: '+req.Status();
+                    }
+                    result = JSON.parse(resp);
+                
+                    //DELETE token
+                    resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
+                    if (req.Status() != 204) {
+                        throw 'Response code: '+req.Status();
+                    }
+                 
+                } catch (error) {
+                    Zabbix.Log(4, 'OneView api error: '+error);
+                    result = {
+                        failed: error
+                    };
+                }
+                
+                //RESULT
+                return JSON.stringify(result);
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.name
+              parameters:
+                -
+                  name: password
+                  value: '{$ONEVIEW_PASS}'
+                -
+                  name: userName
+                  value: '{$ONEVIEW_USER}'
+            -
+              name: 'Interconnect BAY{#ENCLOSURE_INTERCONNECT_BAY} serial number'
+              type: SCRIPT
+              key: 'get.interconnect.serianNumber.bay[{#ENCLOSURE_INTERCONNECT_BAY}]'
+              delay: 3m
+              trends: '0'
+              value_type: TEXT
+              params: |
+                try {
+                    var result = [],
+                    req = new CurlHttpRequest(),
+                    resp;
+                    req.AddHeader('content-type: application/json');
+                    req.AddHeader('x-api-version: 3000');
+                
+                    //GET Token
+                    resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
+                    if (req.Status() != 200) {
+                        throw 'Response code: '+req.Status();
+                    }
+                    resp = JSON.parse(resp);
+                    token = resp.sessionID;
+                
+                    //GET Enclosure
+                    req.AddHeader('auth: '+token);
+                    resp = req.Get('https://{$ONEVIEW_HOST}/{#ENCLOSURE_INTERCONNECT_URI}');
+                    if (req.Status() != 200) {
+                        throw 'Response code: '+req.Status();
+                    }
+                    result = JSON.parse(resp);
+                
+                    //DELETE token
+                    resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
+                    if (req.Status() != 204) {
+                        throw 'Response code: '+req.Status();
+                    }
+                 
+                } catch (error) {
+                    Zabbix.Log(4, 'OneView api error: '+error);
+                    result = {
+                        failed: error
+                    };
+                }
+                
+                //RESULT
+                return JSON.stringify(result);
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.serialNumber
+              parameters:
+                -
+                  name: password
+                  value: '{$ONEVIEW_PASS}'
+                -
+                  name: userName
+                  value: '{$ONEVIEW_USER}'
+            -
+              name: 'Interconnect BAY{#ENCLOSURE_INTERCONNECT_BAY} status'
+              type: SCRIPT
+              key: 'get.interconnect.status.bay[{#ENCLOSURE_INTERCONNECT_BAY}]'
+              delay: 3m
+              trends: '0'
+              value_type: TEXT
+              params: |
+                try {
+                    var result = [],
+                    req = new CurlHttpRequest(),
+                    resp;
+                    req.AddHeader('content-type: application/json');
+                    req.AddHeader('x-api-version: 3000');
+                
+                    //GET Token
+                    resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
+                    if (req.Status() != 200) {
+                        throw 'Response code: '+req.Status();
+                    }
+                    resp = JSON.parse(resp);
+                    token = resp.sessionID;
+                
+                    //GET Enclosure
+                    req.AddHeader('auth: '+token);
+                    resp = req.Get('https://{$ONEVIEW_HOST}/{#ENCLOSURE_INTERCONNECT_URI}');
+                    if (req.Status() != 200) {
+                        throw 'Response code: '+req.Status();
+                    }
+                    result = JSON.parse(resp);
+                
+                    //DELETE token
+                    resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
+                    if (req.Status() != 204) {
+                        throw 'Response code: '+req.Status();
+                    }
+                 
+                } catch (error) {
+                    Zabbix.Log(4, 'OneView api error: '+error);
+                    result = {
+                        failed: error
+                    };
+                }
+                
+                //RESULT
+                return JSON.stringify(result);
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.status
+              parameters:
+                -
+                  name: password
+                  value: '{$ONEVIEW_PASS}'
+                -
+                  name: userName
+                  value: '{$ONEVIEW_USER}'
+              trigger_prototypes:
+                -
+                  expression: '{last()}<>"OK"'
+                  name: 'Enclosure Interrconnect module error in BAY{#ENCLOSURE_APPLIANCE_BAY}'
+                  opdata: 'Interconnect status: {ITEM.LASTVALUE1}'
+                  priority: HIGH
+          master_item:
+            key: oneview.get.enclosure.parameters
+          lld_macro_paths:
+            -
+              lld_macro: '{#ENCLOSURE_INTERCONNECT_BAY}'
+              path: $.bayNumber
+            -
+              lld_macro: '{#ENCLOSURE_INTERCONNECT_URI}'
+              path: $.interconnectUri
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.interconnectBays
+        -
           name: 'Enclosure manager bays discovery'
           type: DEPENDENT
           key: enclosure.manager.disovery
@@ -765,7 +1029,7 @@ zabbix_export:
             -
               name: 'OneView Enclosure: Manager Bay{#ENCLOSURE_MANAGER_BAY} {#ENCLOSURE_MANAGER_MODEL} Link Status'
               type: DEPENDENT
-              key: 'manager.bay.linkstatus.[{#ENCLOSURE_MANAGER_BAY}]'
+              key: 'manager.linkstatus.bay[{#ENCLOSURE_MANAGER_BAY}]'
               delay: '0'
               trends: '0'
               value_type: TEXT
@@ -785,7 +1049,7 @@ zabbix_export:
             -
               name: 'OneView Enclosure: Manager Bay{#ENCLOSURE_MANAGER_BAY} {#ENCLOSURE_MANAGER_MODEL} Status'
               type: DEPENDENT
-              key: 'manager.bay.status.[{#ENCLOSURE_MANAGER_BAY}]'
+              key: 'manager.status.bay[{#ENCLOSURE_MANAGER_BAY}]'
               delay: '0'
               trends: '0'
               value_type: CHAR
@@ -826,9 +1090,23 @@ zabbix_export:
           delay: '0'
           item_prototypes:
             -
+              name: 'OneView Enclosure: PSU Bay{#ENCLOSURE_PSU_BAY} Model'
+              type: DEPENDENT
+              key: 'psu.model.bay[{#ENCLOSURE_PSU_BAY}]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.powerSupplyBays[?(@.bayNumber=="{#ENCLOSURE_PSU_BAY}")].model.first()'
+              master_item:
+                key: oneview.get.enclosure.parameters
+            -
               name: 'OneView Enclosure: PSU Bay{#ENCLOSURE_PSU_BAY} Presence'
               type: DEPENDENT
-              key: 'psu.bay.presence.[{#ENCLOSURE_PSU_BAY}]'
+              key: 'psu.presence.bay[{#ENCLOSURE_PSU_BAY}]'
               delay: '0'
               trends: '0'
               value_type: TEXT
@@ -842,7 +1120,7 @@ zabbix_export:
             -
               name: 'OneView Enclosure: PSU Bay{#ENCLOSURE_PSU_BAY} Status'
               type: DEPENDENT
-              key: 'psu.bay.status.[{#ENCLOSURE_PSU_BAY}]'
+              key: 'psu.status.bay[{#ENCLOSURE_PSU_BAY}]'
               delay: '0'
               trends: '0'
               value_type: CHAR

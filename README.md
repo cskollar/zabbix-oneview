@@ -4,13 +4,19 @@ This is a Zabbix template for HPE OneView (especially for Synergy frames). It us
 
 #### Features
 
-- get OneView active and locked alerts with lld
-- enclosure discovery with lld (enclosure hosts created dynamically)
-- server blades discovery with lld (server hosts created dynamically)
+- get OneView active and locked alerts
+- enclosure discovery with
+    - fan bays
+    - psu bays
+    - appliance bays
+    - manager bays
+    - interconnect bays
+- logical-enclosure discovery
+- server hardware discovery
+- create hosts/items/triggers dynamically for enclosuresm servers and other components
 
 #### Work in progress
 
-- interconnect bays discovery
 - SAN/storage discovery
 - tags & applications support
 - Zabbix 6.0 support
@@ -25,13 +31,13 @@ OneView: tested with OneView 6.2 (rest api version 3000) but it works with newes
 
 ## How to use
 
-1. Import the template file (it contains 3 templates)
-2. Set the proper host group in the main template ("HPE OneView" -> enclosure AND server discovery -> host prototype -> groups)
+1. Import the template file (it contains 4 templates)
+2. Set the proper host groups in the main template ("HPE OneView" -> enclosure, logical-enclosure, server discovery -> host prototype -> groups)
 3. Create a host for the OneView appliance (eg.: composer1.local.tld)
 4. Link the main template ("HPE OneView") to the host
 5. Assign user macros to the host (see below)
 
-The other two tepmlates ("HPE OneView Enclosure", "HPE OneView Server") are automatically assigned to the created hosts by llds.
+The other 3 tepmlates (HPE OneView Enclosure, HPE OneView Logical Enclosure, HPE OneView Server) are automatically assigned to the created hosts by llds.
 
 #### These following settings are required on the OneView host by user macros:
 
