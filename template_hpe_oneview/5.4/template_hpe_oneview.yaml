@@ -1,0 +1,923 @@
+zabbix_export:
+  version: '5.2'
+  date: '2022-02-05T22:53:39Z'
+  groups:
+    -
+      name: 'Discovered hosts'
+    -
+      name: Templates/Applications
+    -
+      name: 'Templates/Server hardware'
+  templates:
+    -
+      template: 'HPE OneView'
+      name: 'HPE OneView'
+      templates:
+        -
+          name: 'ICMP Ping'
+      groups:
+        -
+          name: Templates/Applications
+      items:
+        -
+          name: 'OneView: Get Alerts'
+          type: SCRIPT
+          key: oneview.get.alerts
+          trends: '0'
+          value_type: TEXT
+          params: |
+            //Get token
+            try {
+                var result = [],
+                req = new CurlHttpRequest(),
+                resp;
+                req.AddHeader('content-type: application/json');
+                resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
+              
+                if (req.Status() != 200) {
+                    throw 'Response code: '+req.Status();
+                }
+              
+                resp = JSON.parse(resp);
+             
+            } catch (error) {
+                Zabbix.Log(4, 'OneView token creation failed json : '+JSON.stringify(value));
+                Zabbix.Log(4, 'OneView token creation failed : '+error);
+                result = {};
+            }
+            
+            //Get Alerts
+            var req = new CurlHttpRequest(),
+            dataresp;
+            req.AddHeader('content-type: application/json');
+            req.AddHeader('x-api-version: 3000');
+            req.AddHeader('auth: '+resp.sessionID);
+            dataresp = req.Get('https://{$ONEVIEW_HOST}/rest/alerts?query=%22alertState%20EQ%20%27Active%27%20OR%20alertState%20EQ%20%27Locked%27%22');
+            dataresp = JSON.parse(dataresp);
+                for (var i = 0; i < dataresp.members.length; i++) {
+                    var alerts = {id: dataresp.members[i].uri.replace("\/rest\/alerts\/",""), description: dataresp.members[i].description, severity: dataresp.members[i].severity};
+                    result.push(alerts);
+                }
+            
+            req = new CurlHttpRequest();
+            req.AddHeader('content-type: application/json');
+            req.AddHeader('x-api-version: 3000');
+            req.AddHeader('auth: '+resp.sessionID);
+            delresp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
+            
+            return JSON.stringify(result);
+          parameters:
+            -
+              name: password
+              value: '{$ONEVIEW_PASS}'
+            -
+              name: userName
+              value: '{$ONEVIEW_USER}'
+        -
+          name: 'OneView: Get Enclosures'
+          type: SCRIPT
+          key: oneview.get.enclosures
+          delay: 5m
+          trends: '0'
+          value_type: TEXT
+          params: |
+            //GET token
+            try {
+                var result = [],
+                req = new CurlHttpRequest(),
+                resp;
+                req.AddHeader('content-type: application/json');
+                resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
+              
+                if (req.Status() != 200) {
+                    throw 'Response code: '+req.Status();
+                }
+              
+                resp = JSON.parse(resp);
+             
+            } catch (error) {
+                Zabbix.Log(4, 'OneView token creation failed json : '+JSON.stringify(value));
+                Zabbix.Log(4, 'OneView token creation failed : '+error);
+              
+                result = {};
+            }
+            
+            //GET enclosures
+            var components = [{
+                enclosures: [
+                ],
+                logicalenclosures: [
+                ]
+            }];
+            
+            var req = new CurlHttpRequest(),
+            dataresp;
+            req.AddHeader('content-type: application/json');
+            req.AddHeader('x-api-version: 3000');
+            req.AddHeader('auth: '+resp.sessionID);
+            
+            dataresp = req.Get('https://{$ONEVIEW_HOST}/rest/enclosures');
+            
+            dataresp = JSON.parse(dataresp);  
+            for (var i = 0; i < dataresp.members.length; i++) {
+                  var enclosures = {
+                        uri: dataresp.members[i].uri,
+                        uuid: dataresp.members[i].uuid,
+                        serialNumber: dataresp.members[i].serialNumber,
+                        name: dataresp.members[i].name,
+                        supportState: dataresp.members[i].supportState,
+                        powerCapacityWatts: dataresp.members[i].powerCapacityWatts,
+                        powerAvailableWatts: dataresp.members[i].powerAvailableWatts,
+                        powerAllocatedWatts: dataresp.members[i].powerAllocatedWatts,
+                        fansAndManagementDevicesWatts: dataresp.members[i].fansAndManagementDevicesWatts,
+                        deviceBayWatts: dataresp.members[i].deviceBayWatts,
+                        interconnectBayWatts: dataresp.members[i].interconnectBayWatts
+                    }; 
+                  //GET fans
+                  for (var j = 0; j < dataresp.members[i].fanBays.length; j++) {
+                        enclosures["FAN bay"+dataresp.members[i].fanBays[j].bayNumber+" status"] = dataresp.members[i].fanBays[j].status;
+                        enclosures["FAN bay"+dataresp.members[i].fanBays[j].bayNumber+" presence"] = dataresp.members[i].fanBays[j].devicePresence;
+                  }
+                  //GET PSUs
+                  for (var j = 0; j < dataresp.members[i].powerSupplyBays.length; j++) {
+                        enclosures["PSUBay"+dataresp.members[i].powerSupplyBays[j].bayNumber+" status"] = dataresp.members[i].powerSupplyBays[j].status;
+                        enclosures["PSUBay"+dataresp.members[i].powerSupplyBays[j].bayNumber+" presence"] = dataresp.members[i].powerSupplyBays[j].devicePresence;
+                  }
+                  //GET manager bays
+                  for (var j = 0; j < dataresp.members[i].managerBays.length; j++) {
+                        enclosures["managerBay"+dataresp.members[i].managerBays[j].bayNumber+" status"] = dataresp.members[i].managerBays[j].status;
+                        enclosures["managerBay"+dataresp.members[i].managerBays[j].bayNumber+" linkPortState"] = dataresp.members[i].managerBays[j].linkPortState;
+                        enclosures["managerBay"+dataresp.members[i].managerBays[j].bayNumber+" model"] = dataresp.members[i].managerBays[j].model;
+                  }
+                  //GET appliance bays
+                  for (var j = 0; j < dataresp.members[i].applianceBays.length; j++) {
+                        enclosures["applianceBay"+dataresp.members[i].applianceBays[j].bayNumber+" status"] = dataresp.members[i].applianceBays[j].status;
+                        enclosures["applianceBay"+dataresp.members[i].applianceBays[j].bayNumber+" devicePresence"] = dataresp.members[i].applianceBays[j].devicePresence;
+                        enclosures["applianceBay"+dataresp.members[i].applianceBays[j].bayNumber+" model"] = dataresp.members[i].applianceBays[j].model;
+                        enclosures["applianceBay"+dataresp.members[i].applianceBays[j].bayNumber+" poweredOn"] = dataresp.members[i].applianceBays[j].poweredOn;
+                  }
+                  //PUSH data to output array
+                  components[0].enclosures.push(enclosures);
+                }
+            
+            //DELETE token
+            req = new CurlHttpRequest();
+            req.AddHeader('content-type: application/json');
+            req.AddHeader('x-api-version: 3000');
+            req.AddHeader('auth: '+resp.sessionID);
+            delresp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
+            
+            //result
+            return JSON.stringify(components[0]);
+          parameters:
+            -
+              name: password
+              value: '{$ONEVIEW_PASS}'
+            -
+              name: userName
+              value: '{$ONEVIEW_USER}'
+        -
+          name: 'OneView: Get Servers'
+          type: SCRIPT
+          key: oneview.get.servers
+          delay: 5m
+          trends: '0'
+          value_type: TEXT
+          params: |
+            //GET token
+            try {
+                var result = [],
+                req = new CurlHttpRequest(),
+                resp;
+                req.AddHeader('content-type: application/json');
+                resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
+              
+                if (req.Status() != 200) {
+                    throw 'Response code: '+req.Status();
+                }
+              
+                resp = JSON.parse(resp);
+             
+            } catch (error) {
+                Zabbix.Log(4, 'OneView token creation failed json : '+JSON.stringify(value));
+                Zabbix.Log(4, 'OneView token creation failed : '+error);
+              
+                result = {};
+            }
+            
+            //---------- GET components ----------
+            var serverHardware = [{
+                servers: [
+                ]
+            }];
+            
+            //GET servers
+            var req = new CurlHttpRequest(),
+            dataresp;
+            req.AddHeader('content-type: application/json');
+            req.AddHeader('x-api-version: 3000');
+            req.AddHeader('auth: '+resp.sessionID);
+            
+            dataresp = req.Get('https://{$ONEVIEW_HOST}/rest/server-hardware');
+            
+            dataresp = JSON.parse(dataresp);  
+            for (var i = 0; i < dataresp.members.length; i++) {
+                  var servers = {
+                        uri: dataresp.members[i].uri,
+                        name: dataresp.members[i].name.replace(", "," - "),
+                        model: dataresp.members[i].model,
+                     }; 
+                   //PUSH data to output array
+                  serverHardware[0].servers.push(servers);
+                }
+            
+            //DELETE token
+            req = new CurlHttpRequest();
+            req.AddHeader('content-type: application/json');
+            req.AddHeader('x-api-version: 3000');
+            req.AddHeader('auth: '+resp.sessionID);
+            delresp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
+            
+            //result
+            return JSON.stringify(serverHardware[0]);
+          parameters:
+            -
+              name: password
+              value: '{$ONEVIEW_PASS}'
+            -
+              name: userName
+              value: '{$ONEVIEW_USER}'
+      discovery_rules:
+        -
+          name: 'Alert discovery'
+          type: DEPENDENT
+          key: oneview.alerts.discovery
+          delay: '0'
+          lifetime: '0'
+          item_prototypes:
+            -
+              name: '({#ALERT_ID}) {#ALERT_DESC}'
+              type: DEPENDENT
+              key: 'oneview.alert.severity[{#ALERT_ID}]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$[?(@.["id"]=="{#ALERT_ID}")].["severity"].first()'
+              master_item:
+                key: oneview.get.alerts
+              trigger_prototypes:
+                -
+                  expression: '{last()}<>"OK"'
+                  name: 'OneView alert: {#ALERT_DESC}'
+                  opdata: '{#ALERT_SEVERITY}'
+                  priority: HIGH
+          master_item:
+            key: oneview.get.alerts
+          lld_macro_paths:
+            -
+              lld_macro: '{#ALERT_DESC}'
+              path: $.description
+            -
+              lld_macro: '{#ALERT_ID}'
+              path: $.id
+            -
+              lld_macro: '{#ALERT_SEVERITY}'
+              path: $.severity
+        -
+          name: 'Enclosure discovery'
+          type: DEPENDENT
+          key: oneview.enclosures.discovery
+          delay: '0'
+          host_prototypes:
+            -
+              host: 'enclosure - {#ENCLOSURE_NAME}'
+              name: 'enclosure - {#ENCLOSURE_NAME}'
+              group_links:
+                -
+                  group:
+                    name: 'Discovered hosts'
+              templates:
+                -
+                  name: 'HPE OneView Enclosure'
+              macros:
+                -
+                  macro: '{$ENCLOSURE_URI}'
+                  value: '{#ENCLOSURE_URI}'
+          master_item:
+            key: oneview.get.enclosures
+          lld_macro_paths:
+            -
+              lld_macro: '{#ENCLOSURE_NAME}'
+              path: '$.["name"]'
+            -
+              lld_macro: '{#ENCLOSURE_URI}'
+              path: '$.["uri"]'
+            -
+              lld_macro: '{#ENCLOSURE_UUID}'
+              path: '$.["uuid"]'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.enclosures
+        -
+          name: 'Server discovery'
+          type: DEPENDENT
+          key: oneview.server.discovery
+          delay: '0'
+          host_prototypes:
+            -
+              host: '{#SERVER_MODEL} - {#SERVER_NAME}'
+              name: '{#SERVER_MODEL} - {#SERVER_NAME}'
+              group_links:
+                -
+                  group:
+                    name: 'Discovered hosts'
+              templates:
+                -
+                  name: 'HPE OneView Server'
+              macros:
+                -
+                  macro: '{$SERVER_URI}'
+                  value: '{#SERVER_URI}'
+          master_item:
+            key: oneview.get.servers
+          lld_macro_paths:
+            -
+              lld_macro: '{#SERVER_MODEL}'
+              path: '$.["model"]'
+            -
+              lld_macro: '{#SERVER_NAME}'
+              path: '$.["name"]'
+            -
+              lld_macro: '{#SERVER_URI}'
+              path: '$.["uri"]'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.servers
+      macros:
+        -
+          macro: '{$ONEVIEW_HOST}'
+        -
+          macro: '{$ONEVIEW_PASS}'
+        -
+          macro: '{$ONEVIEW_USER}'
+    -
+      template: 'HPE OneView Enclosure'
+      name: 'HPE OneView Enclosure'
+      groups:
+        -
+          name: 'Templates/Server hardware'
+      items:
+        -
+          name: 'OneView Enclosure: Power Interconnect Bays'
+          type: DEPENDENT
+          key: oneview.enclosure.interconnectbayspower
+          delay: '0'
+          units: W
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.interconnectBayWatts
+          master_item:
+            key: oneview.get.parts
+        -
+          name: 'OneView Enclosure: Power Fans and Management Devices'
+          type: DEPENDENT
+          key: oneview.enclosure.mgmtpower
+          delay: '0'
+          units: W
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.fansAndManagementDevicesWatts
+          master_item:
+            key: oneview.get.parts
+        -
+          name: 'OneView Enclosure: Power Allocated'
+          type: DEPENDENT
+          key: oneview.enclosure.powerallocated
+          delay: '0'
+          units: W
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.powerAllocatedWatts
+          master_item:
+            key: oneview.get.parts
+        -
+          name: 'OneView Enclosure: Power Available'
+          type: DEPENDENT
+          key: oneview.enclosure.poweravailable
+          delay: '0'
+          units: W
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.powerAvailableWatts
+          master_item:
+            key: oneview.get.parts
+        -
+          name: 'OneView Enclosure: Power Capacity'
+          type: DEPENDENT
+          key: oneview.enclosure.powercapacity
+          delay: '0'
+          units: W
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.powerCapacityWatts
+          master_item:
+            key: oneview.get.parts
+        -
+          name: 'OneView Enclosure: Serial Number'
+          type: DEPENDENT
+          key: oneview.enclosure.serialnumber
+          delay: '0'
+          trends: '0'
+          value_type: CHAR
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.serialNumber
+          master_item:
+            key: oneview.get.parts
+        -
+          name: 'OneView Enclosure: Power Server Bays'
+          type: DEPENDENT
+          key: oneview.enclosure.serverbayspower
+          delay: '0'
+          units: W
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.deviceBayWatts
+          master_item:
+            key: oneview.get.parts
+        -
+          name: 'OneView Enclosure: Status'
+          type: DEPENDENT
+          key: oneview.enclosure.status
+          delay: '0'
+          trends: '0'
+          value_type: CHAR
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.status
+          master_item:
+            key: oneview.get.parts
+        -
+          name: 'OneView Enclosure: Support State'
+          type: DEPENDENT
+          key: oneview.enclosure.supportstate
+          delay: '0'
+          trends: '0'
+          value_type: CHAR
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.supportState
+          master_item:
+            key: oneview.get.parts
+        -
+          name: 'OneView Enclosure: Get Components'
+          type: SCRIPT
+          key: oneview.get.parts
+          trends: '0'
+          value_type: TEXT
+          params: |
+            //GET token
+            try {
+                var result = [],
+                req = new CurlHttpRequest(),
+                resp;
+                req.AddHeader('content-type: application/json');
+                resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
+              
+                if (req.Status() != 200) {
+                    throw 'Response code: '+req.Status();
+                }
+              
+                resp = JSON.parse(resp);
+             
+            } catch (error) {
+                Zabbix.Log(4, 'OneView token creation failed json : '+JSON.stringify(value));
+                Zabbix.Log(4, 'OneView token creation failed : '+error);
+              
+                result = {};
+            }
+            
+            var req = new CurlHttpRequest(),
+            dataresp;
+            req.AddHeader('content-type: application/json');
+            req.AddHeader('x-api-version: 3000');
+            req.AddHeader('auth: '+resp.sessionID);
+            
+            dataresp = req.Get('https://{$ONEVIEW_HOST}/{$ENCLOSURE_URI}');
+            dataresp = JSON.parse(dataresp);  
+             
+            //DELETE token
+            req = new CurlHttpRequest();
+            req.AddHeader('content-type: application/json');
+            req.AddHeader('x-api-version: 3000');
+            req.AddHeader('auth: '+resp.sessionID);
+            delresp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
+            
+            //result
+            return JSON.stringify(dataresp);
+          parameters:
+            -
+              name: password
+              value: '{$ONEVIEW_PASS}'
+            -
+              name: userName
+              value: '{$ONEVIEW_USER}'
+      discovery_rules:
+        -
+          name: 'Enclosure appliance bays discovery'
+          type: DEPENDENT
+          key: enclosure.appliance.disovery
+          delay: '0'
+          item_prototypes:
+            -
+              name: 'OneView Enclosure: Appliance Bay{#ENCLOSURE_APPLIANCE_BAY} {#ENCLOSURE_APPLIANCE_MODEL} Power State'
+              type: DEPENDENT
+              key: 'appliance.bay.power.[{#ENCLOSURE_APPLIANCE_BAY}]'
+              delay: '0'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.applianceBays[?(@.bayNumber=="{#ENCLOSURE_APPLIANCE_BAY}")].poweredOn.first()'
+              master_item:
+                key: oneview.get.parts
+            -
+              name: 'OneView Enclosure: Appliance Bay{#ENCLOSURE_APPLIANCE_BAY} {#ENCLOSURE_APPLIANCE_MODEL} Presence'
+              type: DEPENDENT
+              key: 'appliance.bay.presence.[{#ENCLOSURE_APPLIANCE_BAY}]'
+              delay: '0'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.applianceBays[?(@.bayNumber=="{#ENCLOSURE_APPLIANCE_BAY}")].devicePresence.first()'
+              master_item:
+                key: oneview.get.parts
+            -
+              name: 'OneView Enclosure: Appliance Bay{#ENCLOSURE_APPLIANCE_BAY} {#ENCLOSURE_APPLIANCE_MODEL} Status'
+              type: DEPENDENT
+              key: 'appliance.bay.status.[{#ENCLOSURE_APPLIANCE_BAY}]'
+              delay: '0'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.applianceBays[?(@.bayNumber=="{#ENCLOSURE_APPLIANCE_BAY}")].status.first()'
+              master_item:
+                key: oneview.get.parts
+          master_item:
+            key: oneview.get.parts
+          lld_macro_paths:
+            -
+              lld_macro: '{#ENCLOSURE_APPLIANCE_BAY}'
+              path: $.bayNumber
+            -
+              lld_macro: '{#ENCLOSURE_APPLIANCE_MODEL}'
+              path: $.model
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.applianceBays
+        -
+          name: 'Enclosure fan discovery'
+          type: DEPENDENT
+          key: enclosure.fan.disovery
+          delay: '0'
+          item_prototypes:
+            -
+              name: 'OneView Enclosure: FAN Bay{#ENCLOSURE_FAN_BAY} Presence'
+              type: DEPENDENT
+              key: 'fan.bay.presence.[{#ENCLOSURE_FAN_BAY}]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.fanBays[?(@.bayNumber=="{#ENCLOSURE_FAN_BAY}")].devicePresence.first()'
+              master_item:
+                key: oneview.get.parts
+            -
+              name: 'OneView Enclosure: FAN Bay{#ENCLOSURE_FAN_BAY} Status'
+              type: DEPENDENT
+              key: 'fan.bay.status.[{#ENCLOSURE_FAN_BAY}]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.fanBays[?(@.bayNumber=="{#ENCLOSURE_FAN_BAY}")].status.first()'
+                  error_handler: DISCARD_VALUE
+              master_item:
+                key: oneview.get.parts
+          master_item:
+            key: oneview.get.parts
+          lld_macro_paths:
+            -
+              lld_macro: '{#ENCLOSURE_FAN_BAY}'
+              path: $.bayNumber
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.fanBays
+        -
+          name: 'Enclosure manager bays discovery'
+          type: DEPENDENT
+          key: enclosure.manager.disovery
+          delay: '0'
+          item_prototypes:
+            -
+              name: 'OneView Enclosure: Manager Bay{#ENCLOSURE_MANAGER_BAY} {#ENCLOSURE_MANAGER_MODEL} Link State'
+              type: DEPENDENT
+              key: 'manager.bay.linkstate.[{#ENCLOSURE_MANAGER_BAY}]'
+              delay: '0'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.managerBays[?(@.bayNumber=="{#ENCLOSURE_MANAGER_BAY}")].linkPortState.first()'
+              master_item:
+                key: oneview.get.parts
+            -
+              name: 'OneView Enclosure: Manager Bay{#ENCLOSURE_MANAGER_BAY} {#ENCLOSURE_MANAGER_MODEL} Status'
+              type: DEPENDENT
+              key: 'manager.bay.status.[{#ENCLOSURE_MANAGER_BAY}]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.managerBays[?(@.bayNumber=="{#ENCLOSURE_MANAGER_BAY}")].status.first()'
+              master_item:
+                key: oneview.get.parts
+          master_item:
+            key: oneview.get.parts
+          lld_macro_paths:
+            -
+              lld_macro: '{#ENCLOSURE_MANAGER_BAY}'
+              path: $.bayNumber
+            -
+              lld_macro: '{#ENCLOSURE_MANAGER_MODEL}'
+              path: $.model
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.managerBays
+        -
+          name: 'Enclosure PSU discovery'
+          type: DEPENDENT
+          key: enclosure.psu.disovery
+          delay: '0'
+          item_prototypes:
+            -
+              name: 'OneView Enclosure: PSU Bay{#ENCLOSURE_PSU_BAY} Presence'
+              type: DEPENDENT
+              key: 'psu.bay.presence.[{#ENCLOSURE_PSU_BAY}]'
+              delay: '0'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.powerSupplyBays[?(@.bayNumber=="{#ENCLOSURE_PSU_BAY}")].devicePresence.first()'
+              master_item:
+                key: oneview.get.parts
+            -
+              name: 'OneView Enclosure: PSU Bay{#ENCLOSURE_PSU_BAY} Status'
+              type: DEPENDENT
+              key: 'psu.bay.status.[{#ENCLOSURE_PSU_BAY}]'
+              delay: '0'
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$.powerSupplyBays[?(@.bayNumber=="{#ENCLOSURE_PSU_BAY}")].status.first()'
+              master_item:
+                key: oneview.get.parts
+          master_item:
+            key: oneview.get.parts
+          lld_macro_paths:
+            -
+              lld_macro: '{#ENCLOSURE_PSU_BAY}'
+              path: $.bayNumber
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.powerSupplyBays
+    -
+      template: 'HPE OneView Server'
+      name: 'HPE OneView Server'
+      groups:
+        -
+          name: 'Templates/Server hardware'
+      items:
+        -
+          name: 'OneView Server: Get Server Parameteres'
+          type: SCRIPT
+          key: oneview.get.server.parameters
+          trends: '0'
+          value_type: TEXT
+          params: |
+            //GET token
+            try {
+                var result = [],
+                req = new CurlHttpRequest(),
+                resp;
+                req.AddHeader('content-type: application/json');
+                resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
+              
+                if (req.Status() != 200) {
+                    throw 'Response code: '+req.Status();
+                }
+              
+                resp = JSON.parse(resp);
+             
+            } catch (error) {
+                Zabbix.Log(4, 'OneView token creation failed json : '+JSON.stringify(value));
+                Zabbix.Log(4, 'OneView token creation failed : '+error);
+              
+                result = {};
+            }
+            
+            //GET server parameters
+            var req = new CurlHttpRequest(),
+            dataresp;
+            req.AddHeader('content-type: application/json');
+            req.AddHeader('x-api-version: 3000');
+            req.AddHeader('auth: '+resp.sessionID);
+            
+            dataresp = req.Get('https://{$ONEVIEW_HOST}/{$SERVER_URI}');
+            dataresp = JSON.parse(dataresp);  
+             
+            //DELETE token
+            req = new CurlHttpRequest();
+            req.AddHeader('content-type: application/json');
+            req.AddHeader('x-api-version: 3000');
+            req.AddHeader('auth: '+resp.sessionID);
+            delresp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
+            
+            //result
+            return JSON.stringify(dataresp);
+          parameters:
+            -
+              name: password
+              value: '{$ONEVIEW_PASS}'
+            -
+              name: userName
+              value: '{$ONEVIEW_USER}'
+        -
+          name: 'OneView Server: ILO state'
+          type: DEPENDENT
+          key: oneview.server.ilostate
+          delay: '0'
+          trends: '0'
+          value_type: CHAR
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.mpState
+          master_item:
+            key: oneview.get.server.parameters
+        -
+          name: 'OneView Server: Operating System'
+          type: DEPENDENT
+          key: oneview.server.operatingsystem
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.operatingSystem
+          master_item:
+            key: oneview.get.server.parameters
+        -
+          name: 'OneView Server: Position'
+          type: DEPENDENT
+          key: oneview.server.position
+          delay: '0'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.position
+          master_item:
+            key: oneview.get.server.parameters
+        -
+          name: 'OneView Server: Power State'
+          type: DEPENDENT
+          key: oneview.server.powerstate
+          delay: '0'
+          trends: '0'
+          value_type: CHAR
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.powerState
+          master_item:
+            key: oneview.get.server.parameters
+        -
+          name: 'OneView Server: Serial Number'
+          type: DEPENDENT
+          key: oneview.server.serialnumber
+          delay: '0'
+          trends: '0'
+          value_type: CHAR
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.serialNumber
+          master_item:
+            key: oneview.get.server.parameters
+        -
+          name: 'OneView Server: server name'
+          type: DEPENDENT
+          key: oneview.server.servername
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.serverName
+          master_item:
+            key: oneview.get.server.parameters
+        -
+          name: 'OneView Server: Status'
+          type: DEPENDENT
+          key: oneview.server.status
+          delay: '0'
+          trends: '0'
+          value_type: CHAR
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.status
+          master_item:
+            key: oneview.get.server.parameters
+        -
+          name: 'OneView Server: Support State'
+          type: DEPENDENT
+          key: oneview.server.supportstate
+          delay: '0'
+          trends: '0'
+          value_type: CHAR
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.supportState
+          master_item:
+            key: oneview.get.server.parameters
