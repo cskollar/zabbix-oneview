@@ -1,6 +1,6 @@
 zabbix_export:
   version: '5.2'
-  date: '2022-02-06T13:28:12Z'
+  date: '2022-02-06T14:24:02Z'
   groups:
     -
       name: 'Discovered hosts'
@@ -445,6 +445,12 @@ zabbix_export:
                 - $.status
           master_item:
             key: oneview.get.parts
+          triggers:
+            -
+              expression: '{last()}<>"OK"'
+              name: 'Enclosure status problem'
+              opdata: 'status: {ITEM.LASTVALUE1}'
+              priority: HIGH
         -
           name: 'OneView Enclosure: Support State'
           type: DEPENDENT
@@ -459,10 +465,17 @@ zabbix_export:
                 - $.supportState
           master_item:
             key: oneview.get.parts
+          triggers:
+            -
+              expression: '{last()}<>"Enabled"'
+              name: 'Enclosure support state problem'
+              opdata: 'support state: {ITEM.LASTVALUE1}'
+              priority: WARNING
         -
           name: 'OneView Enclosure: Get Enclosure Parameters'
           type: SCRIPT
           key: oneview.get.parts
+          history: '0'
           trends: '0'
           value_type: TEXT
           params: |
@@ -609,6 +622,12 @@ zabbix_export:
                   error_handler: DISCARD_VALUE
               master_item:
                 key: oneview.get.parts
+              trigger_prototypes:
+                -
+                  expression: '{last()}<>"OK"'
+                  name: 'Enclosure FAN error in BAY{#ENCLOSURE_FAN_BAY}'
+                  opdata: 'state: {ITEM.LASTVALUE1}'
+                  priority: HIGH
           master_item:
             key: oneview.get.parts
           lld_macro_paths:
@@ -702,6 +721,12 @@ zabbix_export:
                     - '$.powerSupplyBays[?(@.bayNumber=="{#ENCLOSURE_PSU_BAY}")].status.first()'
               master_item:
                 key: oneview.get.parts
+              trigger_prototypes:
+                -
+                  expression: '{last()}<>"OK"'
+                  name: 'Encloure PSU error in BAY{#ENCLOSURE_PSU_BAY}'
+                  opdata: 'state: {ITEM.LASTVALUE1}'
+                  priority: HIGH
           master_item:
             key: oneview.get.parts
           lld_macro_paths:
@@ -724,6 +749,7 @@ zabbix_export:
           name: 'OneView Server: Get Server Parameteres'
           type: SCRIPT
           key: oneview.get.server.parameters
+          history: '0'
           trends: '0'
           value_type: TEXT
           params: |
@@ -786,6 +812,12 @@ zabbix_export:
                 - $.mpState
           master_item:
             key: oneview.get.server.parameters
+          triggers:
+            -
+              expression: '{last()}<>"OK"'
+              name: 'Server management processor state problem'
+              opdata: 'ILO state: {ITEM.LASTVALUE1}'
+              priority: HIGH
         -
           name: 'OneView Server: Operating System'
           type: DEPENDENT
@@ -826,6 +858,12 @@ zabbix_export:
                 - $.powerState
           master_item:
             key: oneview.get.server.parameters
+          triggers:
+            -
+              expression: '{last()}="Off"'
+              name: 'Server is powered off'
+              opdata: 'power state: {ITEM.LASTVALUE1}'
+              priority: INFO
         -
           name: 'OneView Server: Serial Number'
           type: DEPENDENT
@@ -868,6 +906,12 @@ zabbix_export:
                 - $.status
           master_item:
             key: oneview.get.server.parameters
+          triggers:
+            -
+              expression: '{last()}<>"OK"'
+              name: 'Server status problem'
+              opdata: 'status: {ITEM.LASTVALUE1}'
+              priority: HIGH
         -
           name: 'OneView Server: Support State'
           type: DEPENDENT
@@ -882,3 +926,9 @@ zabbix_export:
                 - $.supportState
           master_item:
             key: oneview.get.server.parameters
+          triggers:
+            -
+              expression: '{last()}<>"Enabled"'
+              name: 'Server support state problem'
+              opdata: 'support state: {ITEM.LASTVALUE1}'
+              priority: WARNING

@@ -10,7 +10,6 @@ This is a Zabbix template for HPE OneView (especially for Synergy frames). It us
 
 #### Work in progress
 
-- create triggers for health states of enclosure and server components
 - interconnect bays discovery
 - logical enclosures discovery
 - SAN/storage discovery
