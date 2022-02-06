@@ -1,6 +1,6 @@
 zabbix_export:
   version: '5.2'
-  date: '2022-02-06T12:19:59Z'
+  date: '2022-02-06T12:37:15Z'
   groups:
     -
       name: 'Discovered hosts'
@@ -57,19 +57,19 @@ zabbix_export:
             
                 //GET Token
                 resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
-                resp = JSON.parse(resp);
                 if (req.Status() != 200) {
                     throw 'Response code: '+req.Status();
                 }
+                resp = JSON.parse(resp);
                 token = resp.sessionID;
             
                 //GET Alerts
                 req.AddHeader('auth: '+token);
                 resp = req.Get('https://{$ONEVIEW_HOST}/rest/alerts?query=%22alertState%20EQ%20%27Active%27%20OR%20alertState%20EQ%20%27Locked%27%22');
-                resp = JSON.parse(resp);
                 if (req.Status() != 200) {
                     throw 'Response code: '+req.Status();
                 }
+                resp = JSON.parse(resp);
                 for (var i = 0; i < resp.members.length; i++) {
                        var alerts = {
                             id: dataresp.members[i].uri.replace("\/rest\/alerts\/",""),
@@ -81,7 +81,6 @@ zabbix_export:
             
                 //DELETE token
                 resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
-                resp = JSON.parse(resp);
                 if (req.Status() != 204) {
                     throw 'Response code: '+req.Status();
                 }
@@ -118,19 +117,19 @@ zabbix_export:
             
                 //GET Token
                 resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
-                resp = JSON.parse(resp);
                 if (req.Status() != 200) {
                     throw 'Response code: '+req.Status();
                 }
+                resp = JSON.parse(resp);
                 token = resp.sessionID;
             
                 //GET Enclosures
                 req.AddHeader('auth: '+token);
                 resp = req.Get('https://{$ONEVIEW_HOST}/rest/enclosures');
-                resp = JSON.parse(resp);
                 if (req.Status() != 200) {
                     throw 'Response code: '+req.Status();
                 }
+                resp = JSON.parse(resp);
                 for (var i = 0; i < resp.members.length; i++) {
                        var enclosures = {
                             uri: resp.members[i].uri,
@@ -142,7 +141,6 @@ zabbix_export:
             
                 //DELETE token
                 resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
-                resp = JSON.parse(resp);
                 if (req.Status() != 204) {
                     throw 'Response code: '+req.Status();
                 }
@@ -168,6 +166,7 @@ zabbix_export:
           type: SCRIPT
           key: oneview.get.servers
           delay: 5m
+          history: '0'
           trends: '0'
           value_type: TEXT
           params: |
@@ -180,19 +179,19 @@ zabbix_export:
             
                 //GET Token
                 resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
-                resp = JSON.parse(resp);
                 if (req.Status() != 200) {
                     throw 'Response code: '+req.Status();
                 }
+                resp = JSON.parse(resp);
                 token = resp.sessionID;
             
                 //GET Servers
                 req.AddHeader('auth: '+token);
                 resp = req.Get('https://{$ONEVIEW_HOST}/rest/server-hardware');
-                resp = JSON.parse(resp);
                 if (req.Status() != 200) {
                     throw 'Response code: '+req.Status();
                 }
+                resp = JSON.parse(resp);
                 for (var i = 0; i < resp.members.length; i++) {
                        var servers = {
                             uri: resp.members[i].uri,
@@ -478,19 +477,19 @@ zabbix_export:
             
                 //GET Token
                 resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
-                resp = JSON.parse(resp);
                 if (req.Status() != 200) {
                     throw 'Response code: '+req.Status();
                 }
+                resp = JSON.parse(resp);
                 token = resp.sessionID;
             
                 //GET Enclosure
                 req.AddHeader('auth: '+token);
                 resp = req.Get('https://{$ONEVIEW_HOST}/{$ENCLOSURE_URI}');
-                result = JSON.parse(resp);
                 if (req.Status() != 200) {
                     throw 'Response code: '+req.Status();
                 }
+                result = JSON.parse(resp);
             
                 //DELETE token
                 resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
@@ -739,19 +738,19 @@ zabbix_export:
             
                 //GET Token
                 resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
-                resp = JSON.parse(resp);
                 if (req.Status() != 200) {
                     throw 'Response code: '+req.Status();
                 }
+                resp = JSON.parse(resp);
                 token = resp.sessionID;
             
                 //GET Server
                 req.AddHeader('auth: '+token);
                 resp = req.Get('https://{$ONEVIEW_HOST}/{$SERVER_URI}');
-                result = JSON.parse(resp);
                 if (req.Status() != 200) {
                     throw 'Response code: '+req.Status();
                 }
+                result = JSON.parse(resp);
             
                 //DELETE token
                 resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
