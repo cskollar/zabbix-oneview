@@ -1,6 +1,6 @@
 zabbix_export:
   version: '5.2'
-  date: '2022-02-05T22:53:39Z'
+  date: '2022-02-06T12:19:59Z'
   groups:
     -
       name: 'Discovered hosts'
@@ -12,6 +12,29 @@ zabbix_export:
     -
       template: 'HPE OneView'
       name: 'HPE OneView'
+      description: |
+        Version: 1.0
+        Homepage: https://github.com/cskollar/zabbix-oneview
+        Author: Csaba Kollar
+        
+        Zabbix template for HPE OneView (especially for Synergy frames). It uses native Zabbix features and functions and doesn't require any external scripts or plugins. Queries are implemented through the official OneView REST API.
+        
+        Usage:
+        
+        1. Import the template file (it contains 3 templates)
+        
+        2. Set the proper host group in the main template ("HPE OneView" -> enclosure AND server discovery -> host prototype -> groups)
+        
+        3. Create a host for the OneView appliance (eg.: composer1.local.tld)
+        Link the main template ("HPE OneView") to the host
+        
+        4. Assign user macros to the host
+        
+        User macros:
+        
+        {$ONEVIEW_HOST} - host or IP address of the composer (OneView appliance)
+        {$ONEVIEW_USER} - OneView username
+        {$ONEVIEW_PASS} - OneView password
       templates:
         -
           name: 'ICMP Ping'
@@ -26,45 +49,51 @@ zabbix_export:
           trends: '0'
           value_type: TEXT
           params: |
-            //Get token
             try {
                 var result = [],
-                req = new CurlHttpRequest(),
-                resp;
+                req = new CurlHttpRequest(),resp;
                 req.AddHeader('content-type: application/json');
+                req.AddHeader('x-api-version: 3000');
+            
+                //GET Token
                 resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
-              
+                resp = JSON.parse(resp);
                 if (req.Status() != 200) {
                     throw 'Response code: '+req.Status();
                 }
-              
-                resp = JSON.parse(resp);
-             
-            } catch (error) {
-                Zabbix.Log(4, 'OneView token creation failed json : '+JSON.stringify(value));
-                Zabbix.Log(4, 'OneView token creation failed : '+error);
-                result = {};
-            }
+                token = resp.sessionID;
             
-            //Get Alerts
-            var req = new CurlHttpRequest(),
-            dataresp;
-            req.AddHeader('content-type: application/json');
-            req.AddHeader('x-api-version: 3000');
-            req.AddHeader('auth: '+resp.sessionID);
-            dataresp = req.Get('https://{$ONEVIEW_HOST}/rest/alerts?query=%22alertState%20EQ%20%27Active%27%20OR%20alertState%20EQ%20%27Locked%27%22');
-            dataresp = JSON.parse(dataresp);
-                for (var i = 0; i < dataresp.members.length; i++) {
-                    var alerts = {id: dataresp.members[i].uri.replace("\/rest\/alerts\/",""), description: dataresp.members[i].description, severity: dataresp.members[i].severity};
+                //GET Alerts
+                req.AddHeader('auth: '+token);
+                resp = req.Get('https://{$ONEVIEW_HOST}/rest/alerts?query=%22alertState%20EQ%20%27Active%27%20OR%20alertState%20EQ%20%27Locked%27%22');
+                resp = JSON.parse(resp);
+                if (req.Status() != 200) {
+                    throw 'Response code: '+req.Status();
+                }
+                for (var i = 0; i < resp.members.length; i++) {
+                       var alerts = {
+                            id: dataresp.members[i].uri.replace("\/rest\/alerts\/",""),
+                            description: dataresp.members[i].description,
+                            severity: dataresp.members[i].severity
+                       };
                     result.push(alerts);
                 }
             
-            req = new CurlHttpRequest();
-            req.AddHeader('content-type: application/json');
-            req.AddHeader('x-api-version: 3000');
-            req.AddHeader('auth: '+resp.sessionID);
-            delresp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
+                //DELETE token
+                resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
+                resp = JSON.parse(resp);
+                if (req.Status() != 204) {
+                    throw 'Response code: '+req.Status();
+                }
+             
+            } catch (error) {
+                Zabbix.Log(4, 'OneView api error: '+error);
+                result = {
+                    failed: error
+                };
+            }
             
+            //RESULT
             return JSON.stringify(result);
           parameters:
             -
@@ -81,94 +110,52 @@ zabbix_export:
           trends: '0'
           value_type: TEXT
           params: |
-            //GET token
             try {
                 var result = [],
-                req = new CurlHttpRequest(),
-                resp;
+                req = new CurlHttpRequest(),resp;
                 req.AddHeader('content-type: application/json');
+                req.AddHeader('x-api-version: 3000');
+            
+                //GET Token
                 resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
-              
+                resp = JSON.parse(resp);
                 if (req.Status() != 200) {
                     throw 'Response code: '+req.Status();
                 }
-              
+                token = resp.sessionID;
+            
+                //GET Enclosures
+                req.AddHeader('auth: '+token);
+                resp = req.Get('https://{$ONEVIEW_HOST}/rest/enclosures');
                 resp = JSON.parse(resp);
-             
-            } catch (error) {
-                Zabbix.Log(4, 'OneView token creation failed json : '+JSON.stringify(value));
-                Zabbix.Log(4, 'OneView token creation failed : '+error);
-              
-                result = {};
-            }
-            
-            //GET enclosures
-            var components = [{
-                enclosures: [
-                ],
-                logicalenclosures: [
-                ]
-            }];
-            
-            var req = new CurlHttpRequest(),
-            dataresp;
-            req.AddHeader('content-type: application/json');
-            req.AddHeader('x-api-version: 3000');
-            req.AddHeader('auth: '+resp.sessionID);
-            
-            dataresp = req.Get('https://{$ONEVIEW_HOST}/rest/enclosures');
-            
-            dataresp = JSON.parse(dataresp);  
-            for (var i = 0; i < dataresp.members.length; i++) {
-                  var enclosures = {
-                        uri: dataresp.members[i].uri,
-                        uuid: dataresp.members[i].uuid,
-                        serialNumber: dataresp.members[i].serialNumber,
-                        name: dataresp.members[i].name,
-                        supportState: dataresp.members[i].supportState,
-                        powerCapacityWatts: dataresp.members[i].powerCapacityWatts,
-                        powerAvailableWatts: dataresp.members[i].powerAvailableWatts,
-                        powerAllocatedWatts: dataresp.members[i].powerAllocatedWatts,
-                        fansAndManagementDevicesWatts: dataresp.members[i].fansAndManagementDevicesWatts,
-                        deviceBayWatts: dataresp.members[i].deviceBayWatts,
-                        interconnectBayWatts: dataresp.members[i].interconnectBayWatts
-                    }; 
-                  //GET fans
-                  for (var j = 0; j < dataresp.members[i].fanBays.length; j++) {
-                        enclosures["FAN bay"+dataresp.members[i].fanBays[j].bayNumber+" status"] = dataresp.members[i].fanBays[j].status;
-                        enclosures["FAN bay"+dataresp.members[i].fanBays[j].bayNumber+" presence"] = dataresp.members[i].fanBays[j].devicePresence;
-                  }
-                  //GET PSUs
-                  for (var j = 0; j < dataresp.members[i].powerSupplyBays.length; j++) {
-                        enclosures["PSUBay"+dataresp.members[i].powerSupplyBays[j].bayNumber+" status"] = dataresp.members[i].powerSupplyBays[j].status;
-                        enclosures["PSUBay"+dataresp.members[i].powerSupplyBays[j].bayNumber+" presence"] = dataresp.members[i].powerSupplyBays[j].devicePresence;
-                  }
-                  //GET manager bays
-                  for (var j = 0; j < dataresp.members[i].managerBays.length; j++) {
-                        enclosures["managerBay"+dataresp.members[i].managerBays[j].bayNumber+" status"] = dataresp.members[i].managerBays[j].status;
-                        enclosures["managerBay"+dataresp.members[i].managerBays[j].bayNumber+" linkPortState"] = dataresp.members[i].managerBays[j].linkPortState;
-                        enclosures["managerBay"+dataresp.members[i].managerBays[j].bayNumber+" model"] = dataresp.members[i].managerBays[j].model;
-                  }
-                  //GET appliance bays
-                  for (var j = 0; j < dataresp.members[i].applianceBays.length; j++) {
-                        enclosures["applianceBay"+dataresp.members[i].applianceBays[j].bayNumber+" status"] = dataresp.members[i].applianceBays[j].status;
-                        enclosures["applianceBay"+dataresp.members[i].applianceBays[j].bayNumber+" devicePresence"] = dataresp.members[i].applianceBays[j].devicePresence;
-                        enclosures["applianceBay"+dataresp.members[i].applianceBays[j].bayNumber+" model"] = dataresp.members[i].applianceBays[j].model;
-                        enclosures["applianceBay"+dataresp.members[i].applianceBays[j].bayNumber+" poweredOn"] = dataresp.members[i].applianceBays[j].poweredOn;
-                  }
-                  //PUSH data to output array
-                  components[0].enclosures.push(enclosures);
+                if (req.Status() != 200) {
+                    throw 'Response code: '+req.Status();
+                }
+                for (var i = 0; i < resp.members.length; i++) {
+                       var enclosures = {
+                            uri: resp.members[i].uri,
+                            uuid: resp.members[i].uuid,
+                            name: resp.members[i].name
+                       }; 
+                       result.push(enclosures);
                 }
             
-            //DELETE token
-            req = new CurlHttpRequest();
-            req.AddHeader('content-type: application/json');
-            req.AddHeader('x-api-version: 3000');
-            req.AddHeader('auth: '+resp.sessionID);
-            delresp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
+                //DELETE token
+                resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
+                resp = JSON.parse(resp);
+                if (req.Status() != 204) {
+                    throw 'Response code: '+req.Status();
+                }
+             
+            } catch (error) {
+                Zabbix.Log(4, 'OneView api error: '+error);
+                result = {
+                    failed: error
+                };
+            }
             
-            //result
-            return JSON.stringify(components[0]);
+            //RESULT
+            return JSON.stringify(result);
           parameters:
             -
               name: password
@@ -184,62 +171,52 @@ zabbix_export:
           trends: '0'
           value_type: TEXT
           params: |
-            //GET token
             try {
                 var result = [],
                 req = new CurlHttpRequest(),
                 resp;
                 req.AddHeader('content-type: application/json');
+                req.AddHeader('x-api-version: 3000');
+            
+                //GET Token
                 resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
-              
+                resp = JSON.parse(resp);
                 if (req.Status() != 200) {
                     throw 'Response code: '+req.Status();
                 }
-              
+                token = resp.sessionID;
+            
+                //GET Servers
+                req.AddHeader('auth: '+token);
+                resp = req.Get('https://{$ONEVIEW_HOST}/rest/server-hardware');
                 resp = JSON.parse(resp);
-             
-            } catch (error) {
-                Zabbix.Log(4, 'OneView token creation failed json : '+JSON.stringify(value));
-                Zabbix.Log(4, 'OneView token creation failed : '+error);
-              
-                result = {};
-            }
-            
-            //---------- GET components ----------
-            var serverHardware = [{
-                servers: [
-                ]
-            }];
-            
-            //GET servers
-            var req = new CurlHttpRequest(),
-            dataresp;
-            req.AddHeader('content-type: application/json');
-            req.AddHeader('x-api-version: 3000');
-            req.AddHeader('auth: '+resp.sessionID);
-            
-            dataresp = req.Get('https://{$ONEVIEW_HOST}/rest/server-hardware');
-            
-            dataresp = JSON.parse(dataresp);  
-            for (var i = 0; i < dataresp.members.length; i++) {
-                  var servers = {
-                        uri: dataresp.members[i].uri,
-                        name: dataresp.members[i].name.replace(", "," - "),
-                        model: dataresp.members[i].model,
-                     }; 
-                   //PUSH data to output array
-                  serverHardware[0].servers.push(servers);
+                if (req.Status() != 200) {
+                    throw 'Response code: '+req.Status();
+                }
+                for (var i = 0; i < resp.members.length; i++) {
+                       var servers = {
+                            uri: resp.members[i].uri,
+                            name: resp.members[i].name.replace(", "," - "),
+                            model: resp.members[i].model,
+                       }; 
+                       result.push(servers);
                 }
             
-            //DELETE token
-            req = new CurlHttpRequest();
-            req.AddHeader('content-type: application/json');
-            req.AddHeader('x-api-version: 3000');
-            req.AddHeader('auth: '+resp.sessionID);
-            delresp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
+                //DELETE token
+                resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
+                if (req.Status() != 204) {
+                    throw 'Response code: '+req.Status();
+                }
+             
+            } catch (error) {
+                Zabbix.Log(4, 'OneView api error: '+error);
+                result = {
+                    failed: error
+                };
+            }
             
-            //result
-            return JSON.stringify(serverHardware[0]);
+            //RESULT
+            return JSON.stringify(result);
           parameters:
             -
               name: password
@@ -319,11 +296,6 @@ zabbix_export:
             -
               lld_macro: '{#ENCLOSURE_UUID}'
               path: '$.["uuid"]'
-          preprocessing:
-            -
-              type: JSONPATH
-              parameters:
-                - $.enclosures
         -
           name: 'Server discovery'
           type: DEPENDENT
@@ -356,11 +328,6 @@ zabbix_export:
             -
               lld_macro: '{#SERVER_URI}'
               path: '$.["uri"]'
-          preprocessing:
-            -
-              type: JSONPATH
-              parameters:
-                - $.servers
       macros:
         -
           macro: '{$ONEVIEW_HOST}'
@@ -496,51 +463,50 @@ zabbix_export:
           master_item:
             key: oneview.get.parts
         -
-          name: 'OneView Enclosure: Get Components'
+          name: 'OneView Enclosure: Get Enclosure Parameters'
           type: SCRIPT
           key: oneview.get.parts
           trends: '0'
           value_type: TEXT
           params: |
-            //GET token
             try {
                 var result = [],
                 req = new CurlHttpRequest(),
                 resp;
                 req.AddHeader('content-type: application/json');
+                req.AddHeader('x-api-version: 3000');
+            
+                //GET Token
                 resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
-              
+                resp = JSON.parse(resp);
                 if (req.Status() != 200) {
                     throw 'Response code: '+req.Status();
                 }
-              
-                resp = JSON.parse(resp);
+                token = resp.sessionID;
+            
+                //GET Enclosure
+                req.AddHeader('auth: '+token);
+                resp = req.Get('https://{$ONEVIEW_HOST}/{$ENCLOSURE_URI}');
+                result = JSON.parse(resp);
+                if (req.Status() != 200) {
+                    throw 'Response code: '+req.Status();
+                }
+            
+                //DELETE token
+                resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
+                if (req.Status() != 204) {
+                    throw 'Response code: '+req.Status();
+                }
              
             } catch (error) {
-                Zabbix.Log(4, 'OneView token creation failed json : '+JSON.stringify(value));
-                Zabbix.Log(4, 'OneView token creation failed : '+error);
-              
-                result = {};
+                Zabbix.Log(4, 'OneView api error: '+error);
+                result = {
+                    failed: error
+                };
             }
             
-            var req = new CurlHttpRequest(),
-            dataresp;
-            req.AddHeader('content-type: application/json');
-            req.AddHeader('x-api-version: 3000');
-            req.AddHeader('auth: '+resp.sessionID);
-            
-            dataresp = req.Get('https://{$ONEVIEW_HOST}/{$ENCLOSURE_URI}');
-            dataresp = JSON.parse(dataresp);  
-             
-            //DELETE token
-            req = new CurlHttpRequest();
-            req.AddHeader('content-type: application/json');
-            req.AddHeader('x-api-version: 3000');
-            req.AddHeader('auth: '+resp.sessionID);
-            delresp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
-            
-            //result
-            return JSON.stringify(dataresp);
+            //RESULT
+            return JSON.stringify(result);
           parameters:
             -
               name: password
@@ -764,46 +730,44 @@ zabbix_export:
           trends: '0'
           value_type: TEXT
           params: |
-            //GET token
             try {
                 var result = [],
                 req = new CurlHttpRequest(),
                 resp;
                 req.AddHeader('content-type: application/json');
+                req.AddHeader('x-api-version: 3000');
+            
+                //GET Token
                 resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
-              
+                resp = JSON.parse(resp);
                 if (req.Status() != 200) {
                     throw 'Response code: '+req.Status();
                 }
-              
-                resp = JSON.parse(resp);
+                token = resp.sessionID;
+            
+                //GET Server
+                req.AddHeader('auth: '+token);
+                resp = req.Get('https://{$ONEVIEW_HOST}/{$SERVER_URI}');
+                result = JSON.parse(resp);
+                if (req.Status() != 200) {
+                    throw 'Response code: '+req.Status();
+                }
+            
+                //DELETE token
+                resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
+                if (req.Status() != 204) {
+                    throw 'Response code: '+req.Status();
+                }
              
             } catch (error) {
-                Zabbix.Log(4, 'OneView token creation failed json : '+JSON.stringify(value));
-                Zabbix.Log(4, 'OneView token creation failed : '+error);
-              
-                result = {};
+                Zabbix.Log(4, 'OneView api error: '+error);
+                result = {
+                    failed: error
+                };
             }
             
-            //GET server parameters
-            var req = new CurlHttpRequest(),
-            dataresp;
-            req.AddHeader('content-type: application/json');
-            req.AddHeader('x-api-version: 3000');
-            req.AddHeader('auth: '+resp.sessionID);
-            
-            dataresp = req.Get('https://{$ONEVIEW_HOST}/{$SERVER_URI}');
-            dataresp = JSON.parse(dataresp);  
-             
-            //DELETE token
-            req = new CurlHttpRequest();
-            req.AddHeader('content-type: application/json');
-            req.AddHeader('x-api-version: 3000');
-            req.AddHeader('auth: '+resp.sessionID);
-            delresp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
-            
-            //result
-            return JSON.stringify(dataresp);
+            //RESULT
+            return JSON.stringify(result);
           parameters:
             -
               name: password
