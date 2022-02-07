@@ -12,7 +12,7 @@ This is a Zabbix template for HPE OneView (especially for Synergy frames). It us
 4. Link the main template ("HPE OneView") to the host
 5. Assign user macros to the host (see below)
 
-The other 3 tepmlates (HPE OneView Enclosure, HPE OneView Logical Enclosure, HPE OneView Server) are automatically assigned to the created hosts.
+The other 3 templates (HPE OneView Enclosure, HPE OneView Logical Enclosure, HPE OneView Server) are automatically assigned to the created hosts.
 
 ## Zabbix configuration
 
@@ -41,7 +41,7 @@ Hosts (enclosures, logical enclosures and servers) are created dynamically by ho
 - OneView
     - alerts
 - Enclosures
-    - power (allocated, availabla, capacity, fans&management modules, interconnect bays, servers)
+    - power (allocated, available, capacity, fans&management modules, interconnect bays, servers)
     - health state
     - support state
     - serial number
