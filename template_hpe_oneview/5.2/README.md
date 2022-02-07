@@ -77,7 +77,7 @@ Hosts (enclosures, logical enclosures and servers) are created dynamically by ho
 
 ## Compatiblity
 
-Zabbix: 4.4 - 5.4 (tested on 5.2)
+Zabbix: 5.2 - 5.4 (tested on 5.2)
 
 OneView: tested on OneView 6.2 (rest api version 3000) but it works with newer versions as well. The api version "3000" is hardcoded in the template. For older versions (<6.2) try rewriting the "req.AddHeader('x-api-version: 3000')" lines in the javascripts in master items.
 
@@ -90,3 +90,7 @@ Each query requests a new token from the api and the received token will be dele
 
 #### Performance
 Fortunately, the api is really fast so it may be able to high frequency monitoring (not tested yet). The templates only launch a small number of queries using master items<->dependent LLDs structure. Each master item holds all the necessary data (in a huge json response), so OneView doesn't need to filtering data or processing complicated queries, it's processed on Zabbix side. Therefore, the average time of a query (include the token request/delete method) is between 0.05 and 0.2 seconds only.
+
+## Author
+
+Csaba Kollar
