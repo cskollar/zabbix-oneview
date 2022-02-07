@@ -1,6 +1,6 @@
 zabbix_export:
   version: '5.2'
-  date: '2022-02-06T21:24:49Z'
+  date: '2022-02-07T17:39:15Z'
   groups:
     -
       name: 'Discovered hosts'
@@ -35,15 +35,15 @@ zabbix_export:
         {$ONEVIEW_HOST} - host or IP address of the composer (OneView appliance)
         {$ONEVIEW_USER} - OneView username
         {$ONEVIEW_PASS} - OneView password
-      templates:
-        -
-          name: 'ICMP Ping'
       groups:
         -
           name: Templates/Applications
+      applications:
+        -
+          name: 'OneView appliance'
       items:
         -
-          name: 'OneView: Get Alerts'
+          name: 'Get alerts'
           type: SCRIPT
           key: oneview.get.alerts
           trends: '0'
@@ -93,6 +93,9 @@ zabbix_export:
             
             //RESULT
             return JSON.stringify(result);
+          applications:
+            -
+              name: 'OneView appliance'
           parameters:
             -
               name: password
@@ -101,7 +104,7 @@ zabbix_export:
               name: userName
               value: '{$ONEVIEW_USER}'
         -
-          name: 'OneView: Get Enclosures'
+          name: 'Get enclosures'
           type: SCRIPT
           key: oneview.get.enclosures
           delay: 5m
@@ -153,6 +156,9 @@ zabbix_export:
             
             //RESULT
             return JSON.stringify(result);
+          applications:
+            -
+              name: 'OneView appliance'
           parameters:
             -
               name: password
@@ -161,7 +167,7 @@ zabbix_export:
               name: userName
               value: '{$ONEVIEW_USER}'
         -
-          name: 'OneView: Get Logical Enclosures'
+          name: 'Get logical enclosures'
           type: SCRIPT
           key: oneview.get.logicalenclosures
           delay: 5m
@@ -212,6 +218,9 @@ zabbix_export:
             
             //RESULT
             return JSON.stringify(result);
+          applications:
+            -
+              name: 'OneView appliance'
           parameters:
             -
               name: password
@@ -220,7 +229,7 @@ zabbix_export:
               name: userName
               value: '{$ONEVIEW_USER}'
         -
-          name: 'OneView: Get Servers'
+          name: 'Get servers'
           type: SCRIPT
           key: oneview.get.servers
           delay: 5m
@@ -273,6 +282,9 @@ zabbix_export:
             
             //RESULT
             return JSON.stringify(result);
+          applications:
+            -
+              name: 'OneView appliance'
           parameters:
             -
               name: password
@@ -289,12 +301,15 @@ zabbix_export:
           lifetime: '0'
           item_prototypes:
             -
-              name: '({#ALERT_ID}) {#ALERT_DESC}'
+              name: 'OneView alert[{#ALERT_ID}] - {#ALERT_DESC}'
               type: DEPENDENT
               key: 'oneview.alert.severity[{#ALERT_ID}]'
               delay: '0'
               trends: '0'
               value_type: CHAR
+              applications:
+                -
+                  name: 'OneView appliance'
               preprocessing:
                 -
                   type: JSONPATH
@@ -353,7 +368,7 @@ zabbix_export:
               lld_macro: '{#ENCLOSURE_UUID}'
               path: '$.["uuid"]'
         -
-          name: 'Logical Enclosure discovery'
+          name: 'Logical enclosure discovery'
           type: DEPENDENT
           key: oneview.logicalenclosures.discovery
           delay: '0'
@@ -426,13 +441,29 @@ zabbix_export:
       groups:
         -
           name: 'Templates/Server hardware'
+      applications:
+        -
+          name: 'Enclosure appliance modules'
+        -
+          name: 'Enclosure FAN'
+        -
+          name: 'Enclosure interconnect modules'
+        -
+          name: 'Enclosure manager modules'
+        -
+          name: 'Enclosure power'
+        -
+          name: 'Enclosure PSU'
       items:
         -
-          name: 'OneView Enclosure: Power Interconnect Bays'
+          name: 'Enclosure power interconnect bays'
           type: DEPENDENT
           key: oneview.enclosure.interconnectbayspower
           delay: '0'
           units: W
+          applications:
+            -
+              name: 'Enclosure power'
           preprocessing:
             -
               type: JSONPATH
@@ -441,11 +472,14 @@ zabbix_export:
           master_item:
             key: oneview.get.enclosure.parameters
         -
-          name: 'OneView Enclosure: Power Fans and Management Devices'
+          name: 'Enclosure power fans and management modules'
           type: DEPENDENT
           key: oneview.enclosure.mgmtpower
           delay: '0'
           units: W
+          applications:
+            -
+              name: 'Enclosure power'
           preprocessing:
             -
               type: JSONPATH
@@ -454,11 +488,14 @@ zabbix_export:
           master_item:
             key: oneview.get.enclosure.parameters
         -
-          name: 'OneView Enclosure: Power Allocated'
+          name: 'Enclosure power allocated'
           type: DEPENDENT
           key: oneview.enclosure.powerallocated
           delay: '0'
           units: W
+          applications:
+            -
+              name: 'Enclosure power'
           preprocessing:
             -
               type: JSONPATH
@@ -467,11 +504,14 @@ zabbix_export:
           master_item:
             key: oneview.get.enclosure.parameters
         -
-          name: 'OneView Enclosure: Power Available'
+          name: 'Enclosure power available'
           type: DEPENDENT
           key: oneview.enclosure.poweravailable
           delay: '0'
           units: W
+          applications:
+            -
+              name: 'Enclosure power'
           preprocessing:
             -
               type: JSONPATH
@@ -480,11 +520,14 @@ zabbix_export:
           master_item:
             key: oneview.get.enclosure.parameters
         -
-          name: 'OneView Enclosure: Power Capacity'
+          name: 'Enclosure power capacity'
           type: DEPENDENT
           key: oneview.enclosure.powercapacity
           delay: '0'
           units: W
+          applications:
+            -
+              name: 'Enclosure power'
           preprocessing:
             -
               type: JSONPATH
@@ -493,7 +536,7 @@ zabbix_export:
           master_item:
             key: oneview.get.enclosure.parameters
         -
-          name: 'OneView Enclosure: Serial Number'
+          name: 'Enclosure serial number'
           type: DEPENDENT
           key: oneview.enclosure.serialnumber
           delay: '0'
@@ -507,11 +550,14 @@ zabbix_export:
           master_item:
             key: oneview.get.enclosure.parameters
         -
-          name: 'OneView Enclosure: Power Server Bays'
+          name: 'Enclosure power server bays'
           type: DEPENDENT
           key: oneview.enclosure.serverbayspower
           delay: '0'
           units: W
+          applications:
+            -
+              name: 'Enclosure power'
           preprocessing:
             -
               type: JSONPATH
@@ -520,7 +566,7 @@ zabbix_export:
           master_item:
             key: oneview.get.enclosure.parameters
         -
-          name: 'OneView Enclosure: Status'
+          name: 'Enclosure status'
           type: DEPENDENT
           key: oneview.enclosure.status
           delay: '0'
@@ -540,7 +586,7 @@ zabbix_export:
               opdata: 'status: {ITEM.LASTVALUE1}'
               priority: HIGH
         -
-          name: 'OneView Enclosure: Support State'
+          name: 'Enclosure support state'
           type: DEPENDENT
           key: oneview.enclosure.supportstate
           delay: '0'
@@ -560,9 +606,10 @@ zabbix_export:
               opdata: 'support state: {ITEM.LASTVALUE1}'
               priority: WARNING
         -
-          name: 'OneView Enclosure: Get Enclosure Parameters'
+          name: 'Get enclosure parameters'
           type: SCRIPT
           key: oneview.get.enclosure.parameters
+          delay: 5m
           history: '0'
           trends: '0'
           value_type: TEXT
@@ -627,12 +674,15 @@ zabbix_export:
                 formulaid: A
           item_prototypes:
             -
-              name: 'OneView Enclosure: Appliance Bay{#ENCLOSURE_APPLIANCE_BAY} {#ENCLOSURE_APPLIANCE_MODEL} Power State'
+              name: 'Enclosure appliance bay{#ENCLOSURE_APPLIANCE_BAY} {#ENCLOSURE_APPLIANCE_MODEL} power state'
               type: DEPENDENT
               key: 'appliance.power.bay[{#ENCLOSURE_APPLIANCE_BAY}]'
               delay: '0'
               trends: '0'
               value_type: TEXT
+              applications:
+                -
+                  name: 'Enclosure appliance modules'
               preprocessing:
                 -
                   type: JSONPATH
@@ -647,12 +697,15 @@ zabbix_export:
                   opdata: 'power state: {ITEM.LASTVALUE1}'
                   priority: AVERAGE
             -
-              name: 'OneView Enclosure: Appliance Bay{#ENCLOSURE_APPLIANCE_BAY} {#ENCLOSURE_APPLIANCE_MODEL} Presence'
+              name: 'Enclosure appliance bay{#ENCLOSURE_APPLIANCE_BAY} {#ENCLOSURE_APPLIANCE_MODEL} presence'
               type: DEPENDENT
               key: 'appliance.presence.bay[{#ENCLOSURE_APPLIANCE_BAY}]'
               delay: '0'
               trends: '0'
               value_type: TEXT
+              applications:
+                -
+                  name: 'Enclosure appliance modules'
               preprocessing:
                 -
                   type: JSONPATH
@@ -661,12 +714,15 @@ zabbix_export:
               master_item:
                 key: oneview.get.enclosure.parameters
             -
-              name: 'OneView Enclosure: Appliance Bay{#ENCLOSURE_APPLIANCE_BAY} {#ENCLOSURE_APPLIANCE_MODEL} Status'
+              name: 'Enclosure appliance bay{#ENCLOSURE_APPLIANCE_BAY} {#ENCLOSURE_APPLIANCE_MODEL} status'
               type: DEPENDENT
               key: 'appliance.status.bay[{#ENCLOSURE_APPLIANCE_BAY}]'
               delay: '0'
               trends: '0'
               value_type: TEXT
+              applications:
+                -
+                  name: 'Enclosure appliance modules'
               preprocessing:
                 -
                   type: JSONPATH
@@ -698,18 +754,21 @@ zabbix_export:
               parameters:
                 - $.applianceBays
         -
-          name: 'Enclosure fan discovery'
+          name: 'Enclosure FAN discovery'
           type: DEPENDENT
           key: enclosure.fan.disovery
           delay: '0'
           item_prototypes:
             -
-              name: 'OneView Enclosure: FAN Bay{#ENCLOSURE_FAN_BAY} Presence'
+              name: 'Enclosure FAN bay{#ENCLOSURE_FAN_BAY} presence'
               type: DEPENDENT
               key: 'fan.presence.bay[{#ENCLOSURE_FAN_BAY}]'
               delay: '0'
               trends: '0'
               value_type: CHAR
+              applications:
+                -
+                  name: 'Enclosure FAN'
               preprocessing:
                 -
                   type: JSONPATH
@@ -718,12 +777,15 @@ zabbix_export:
               master_item:
                 key: oneview.get.enclosure.parameters
             -
-              name: 'OneView Enclosure: FAN Bay{#ENCLOSURE_FAN_BAY} Status'
+              name: 'Enclosure FAN bay{#ENCLOSURE_FAN_BAY} status'
               type: DEPENDENT
               key: 'fan.status.bay[{#ENCLOSURE_FAN_BAY}]'
               delay: '0'
               trends: '0'
               value_type: CHAR
+              applications:
+                -
+                  name: 'Enclosure FAN'
               preprocessing:
                 -
                   type: JSONPATH
@@ -762,10 +824,10 @@ zabbix_export:
                 formulaid: A
           item_prototypes:
             -
-              name: 'Interconnect BAY{#ENCLOSURE_INTERCONNECT_BAY} model'
+              name: 'Interconnect bay{#ENCLOSURE_INTERCONNECT_BAY} model'
               type: SCRIPT
               key: 'get.interconnect.model.bay[{#ENCLOSURE_INTERCONNECT_BAY}]'
-              delay: 3m
+              delay: 5m
               trends: '0'
               value_type: TEXT
               params: |
@@ -807,6 +869,9 @@ zabbix_export:
                 
                 //RESULT
                 return JSON.stringify(result);
+              applications:
+                -
+                  name: 'Enclosure interconnect modules'
               preprocessing:
                 -
                   type: JSONPATH
@@ -820,10 +885,10 @@ zabbix_export:
                   name: userName
                   value: '{$ONEVIEW_USER}'
             -
-              name: 'Interconnect BAY{#ENCLOSURE_INTERCONNECT_BAY} name'
+              name: 'Interconnect bay{#ENCLOSURE_INTERCONNECT_BAY} name'
               type: SCRIPT
               key: 'get.interconnect.namel.bay[{#ENCLOSURE_INTERCONNECT_BAY}]'
-              delay: 3m
+              delay: 5m
               trends: '0'
               value_type: TEXT
               params: |
@@ -865,6 +930,9 @@ zabbix_export:
                 
                 //RESULT
                 return JSON.stringify(result);
+              applications:
+                -
+                  name: 'Enclosure interconnect modules'
               preprocessing:
                 -
                   type: JSONPATH
@@ -878,10 +946,10 @@ zabbix_export:
                   name: userName
                   value: '{$ONEVIEW_USER}'
             -
-              name: 'Interconnect BAY{#ENCLOSURE_INTERCONNECT_BAY} serial number'
+              name: 'Interconnect bay{#ENCLOSURE_INTERCONNECT_BAY} serial number'
               type: SCRIPT
               key: 'get.interconnect.serianNumber.bay[{#ENCLOSURE_INTERCONNECT_BAY}]'
-              delay: 3m
+              delay: 5m
               trends: '0'
               value_type: TEXT
               params: |
@@ -923,6 +991,9 @@ zabbix_export:
                 
                 //RESULT
                 return JSON.stringify(result);
+              applications:
+                -
+                  name: 'Enclosure interconnect modules'
               preprocessing:
                 -
                   type: JSONPATH
@@ -936,10 +1007,10 @@ zabbix_export:
                   name: userName
                   value: '{$ONEVIEW_USER}'
             -
-              name: 'Interconnect BAY{#ENCLOSURE_INTERCONNECT_BAY} status'
+              name: 'Interconnect bay{#ENCLOSURE_INTERCONNECT_BAY} status'
               type: SCRIPT
               key: 'get.interconnect.status.bay[{#ENCLOSURE_INTERCONNECT_BAY}]'
-              delay: 3m
+              delay: 5m
               trends: '0'
               value_type: TEXT
               params: |
@@ -981,6 +1052,9 @@ zabbix_export:
                 
                 //RESULT
                 return JSON.stringify(result);
+              applications:
+                -
+                  name: 'Enclosure interconnect modules'
               preprocessing:
                 -
                   type: JSONPATH
@@ -1027,12 +1101,15 @@ zabbix_export:
                 formulaid: A
           item_prototypes:
             -
-              name: 'OneView Enclosure: Manager Bay{#ENCLOSURE_MANAGER_BAY} {#ENCLOSURE_MANAGER_MODEL} Link Status'
+              name: 'Enclosure manager bay{#ENCLOSURE_MANAGER_BAY} {#ENCLOSURE_MANAGER_MODEL} link status'
               type: DEPENDENT
               key: 'manager.linkstatus.bay[{#ENCLOSURE_MANAGER_BAY}]'
               delay: '0'
               trends: '0'
               value_type: TEXT
+              applications:
+                -
+                  name: 'Enclosure manager modules'
               preprocessing:
                 -
                   type: JSONPATH
@@ -1047,12 +1124,15 @@ zabbix_export:
                   opdata: 'link status: {ITEM.LASTVALUE1}'
                   priority: HIGH
             -
-              name: 'OneView Enclosure: Manager Bay{#ENCLOSURE_MANAGER_BAY} {#ENCLOSURE_MANAGER_MODEL} Status'
+              name: 'Enclosure manager bay{#ENCLOSURE_MANAGER_BAY} {#ENCLOSURE_MANAGER_MODEL} status'
               type: DEPENDENT
               key: 'manager.status.bay[{#ENCLOSURE_MANAGER_BAY}]'
               delay: '0'
               trends: '0'
               value_type: CHAR
+              applications:
+                -
+                  name: 'Enclosure manager modules'
               preprocessing:
                 -
                   type: JSONPATH
@@ -1090,12 +1170,15 @@ zabbix_export:
           delay: '0'
           item_prototypes:
             -
-              name: 'OneView Enclosure: PSU Bay{#ENCLOSURE_PSU_BAY} Model'
+              name: 'Enclosure PSU bay{#ENCLOSURE_PSU_BAY} model'
               type: DEPENDENT
               key: 'psu.model.bay[{#ENCLOSURE_PSU_BAY}]'
               delay: '0'
               trends: '0'
               value_type: CHAR
+              applications:
+                -
+                  name: 'Enclosure PSU'
               preprocessing:
                 -
                   type: JSONPATH
@@ -1104,12 +1187,15 @@ zabbix_export:
               master_item:
                 key: oneview.get.enclosure.parameters
             -
-              name: 'OneView Enclosure: PSU Bay{#ENCLOSURE_PSU_BAY} Presence'
+              name: 'Enclosure PSU bay{#ENCLOSURE_PSU_BAY} presence'
               type: DEPENDENT
               key: 'psu.presence.bay[{#ENCLOSURE_PSU_BAY}]'
               delay: '0'
               trends: '0'
               value_type: TEXT
+              applications:
+                -
+                  name: 'Enclosure PSU'
               preprocessing:
                 -
                   type: JSONPATH
@@ -1118,12 +1204,15 @@ zabbix_export:
               master_item:
                 key: oneview.get.enclosure.parameters
             -
-              name: 'OneView Enclosure: PSU Bay{#ENCLOSURE_PSU_BAY} Status'
+              name: 'Enclosure PSU bay{#ENCLOSURE_PSU_BAY} status'
               type: DEPENDENT
               key: 'psu.status.bay[{#ENCLOSURE_PSU_BAY}]'
               delay: '0'
               trends: '0'
               value_type: CHAR
+              applications:
+                -
+                  name: 'Enclosure PSU'
               preprocessing:
                 -
                   type: JSONPATH
@@ -1156,9 +1245,10 @@ zabbix_export:
           name: 'Templates/Server hardware'
       items:
         -
-          name: 'OneView Enclosure: Get Logical Enclosure Parameters'
+          name: 'Get logical enclosure parameters'
           type: SCRIPT
           key: oneview.get.logicalenclosure.parameters
+          delay: 5m
           history: '0'
           trends: '0'
           value_type: TEXT
@@ -1209,7 +1299,7 @@ zabbix_export:
               name: userName
               value: '{$ONEVIEW_USER}'
         -
-          name: 'OneView Logical Enclosure: consistency state'
+          name: 'Logical enclosure consistency state'
           type: DEPENDENT
           key: oneview.logicalenclosure.consistency
           delay: '0'
@@ -1223,7 +1313,7 @@ zabbix_export:
           master_item:
             key: oneview.get.logicalenclosure.parameters
         -
-          name: 'OneView Logical Enclosure: Status'
+          name: 'Logical enclosure status'
           type: DEPENDENT
           key: oneview.logicalenclosure.status
           delay: '0'
@@ -1244,9 +1334,10 @@ zabbix_export:
           name: 'Templates/Server hardware'
       items:
         -
-          name: 'OneView Server: Get Server Parameteres'
+          name: 'Get server parameteres'
           type: SCRIPT
           key: oneview.get.server.parameters
+          delay: 5m
           history: '0'
           trends: '0'
           value_type: TEXT
@@ -1297,7 +1388,7 @@ zabbix_export:
               name: userName
               value: '{$ONEVIEW_USER}'
         -
-          name: 'OneView Server: ILO state'
+          name: 'Server ILO state'
           type: DEPENDENT
           key: oneview.server.ilostate
           delay: '0'
@@ -1317,7 +1408,7 @@ zabbix_export:
               opdata: 'ILO state: {ITEM.LASTVALUE1}'
               priority: HIGH
         -
-          name: 'OneView Server: Operating System'
+          name: 'Server operating system'
           type: DEPENDENT
           key: oneview.server.operatingsystem
           delay: '0'
@@ -1331,7 +1422,7 @@ zabbix_export:
           master_item:
             key: oneview.get.server.parameters
         -
-          name: 'OneView Server: Position'
+          name: 'Server position'
           type: DEPENDENT
           key: oneview.server.position
           delay: '0'
@@ -1343,7 +1434,7 @@ zabbix_export:
           master_item:
             key: oneview.get.server.parameters
         -
-          name: 'OneView Server: Power State'
+          name: 'Server power state'
           type: DEPENDENT
           key: oneview.server.powerstate
           delay: '0'
@@ -1363,7 +1454,7 @@ zabbix_export:
               opdata: 'power state: {ITEM.LASTVALUE1}'
               priority: INFO
         -
-          name: 'OneView Server: Serial Number'
+          name: 'Server serial number'
           type: DEPENDENT
           key: oneview.server.serialnumber
           delay: '0'
@@ -1377,7 +1468,7 @@ zabbix_export:
           master_item:
             key: oneview.get.server.parameters
         -
-          name: 'OneView Server: server name'
+          name: 'Server name'
           type: DEPENDENT
           key: oneview.server.servername
           delay: '0'
@@ -1391,7 +1482,7 @@ zabbix_export:
           master_item:
             key: oneview.get.server.parameters
         -
-          name: 'OneView Server: Status'
+          name: 'Server status'
           type: DEPENDENT
           key: oneview.server.status
           delay: '0'
@@ -1411,7 +1502,7 @@ zabbix_export:
               opdata: 'status: {ITEM.LASTVALUE1}'
               priority: HIGH
         -
-          name: 'OneView Server: Support State'
+          name: 'Server support state'
           type: DEPENDENT
           key: oneview.server.supportstate
           delay: '0'
