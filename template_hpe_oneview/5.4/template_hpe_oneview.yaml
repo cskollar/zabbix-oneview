@@ -1,5 +1,5 @@
 zabbix_export:
-  version: '5.2'
+  version: '5.4'
   date: '2022-02-07T17:39:15Z'
   groups:
     -
@@ -51,14 +51,14 @@ zabbix_export:
           params: |
             try {
                 var result = [],
-                req = new CurlHttpRequest(),resp;
+                req = new HttpRequest(),resp;
                 req.AddHeader('content-type: application/json');
                 req.AddHeader('x-api-version: 3000');
             
                 //GET Token
-                resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
-                if (req.Status() != 200) {
-                    throw 'Response code: '+req.Status();
+                resp = req.post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
+                if (req.getStatus() != 200) {
+                    throw 'Response code: '+req.getStatus();
                 }
                 resp = JSON.parse(resp);
                 token = resp.sessionID;
@@ -66,8 +66,8 @@ zabbix_export:
                 //GET Alerts
                 req.AddHeader('auth: '+token);
                 resp = req.Get('https://{$ONEVIEW_HOST}/rest/alerts?query=%22alertState%20EQ%20%27Active%27%20OR%20alertState%20EQ%20%27Locked%27%22');
-                if (req.Status() != 200) {
-                    throw 'Response code: '+req.Status();
+                if (req.getStatus() != 200) {
+                    throw 'Response code: '+req.getStatus();
                 }
                 resp = JSON.parse(resp);
                 result = resp.members.map(function(m) {
@@ -80,12 +80,12 @@ zabbix_export:
             
                 //DELETE token
                 resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
-                if (req.Status() != 204) {
-                    throw 'Response code: '+req.Status();
+                if (req.getStatus() != 204) {
+                    throw 'Response code: '+req.getStatus();
                 }
              
             } catch (error) {
-                Zabbix.Log(4, 'OneView api error: '+error);
+                Zabbix.log(4, 'OneView api error: '+error);
                 result = {
                     failed: error
                 };
@@ -114,14 +114,14 @@ zabbix_export:
           params: |
             try {
                 var result = [],
-                req = new CurlHttpRequest(),resp;
+                req = new HttpRequest(),resp;
                 req.AddHeader('content-type: application/json');
                 req.AddHeader('x-api-version: 3000');
             
                 //GET Token
-                resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
-                if (req.Status() != 200) {
-                    throw 'Response code: '+req.Status();
+                resp = req.post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
+                if (req.getStatus() != 200) {
+                    throw 'Response code: '+req.getStatus();
                 }
                 resp = JSON.parse(resp);
                 token = resp.sessionID;
@@ -129,8 +129,8 @@ zabbix_export:
                 //GET Enclosures
                 req.AddHeader('auth: '+token);
                 resp = req.Get('https://{$ONEVIEW_HOST}/rest/enclosures');
-                if (req.Status() != 200) {
-                    throw 'Response code: '+req.Status();
+                if (req.getStatus() != 200) {
+                    throw 'Response code: '+req.getStatus();
                 }
                 resp = JSON.parse(resp);
                 result = resp.members.map(function(m) {
@@ -143,12 +143,12 @@ zabbix_export:
             
                 //DELETE token
                 resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
-                if (req.Status() != 204) {
-                    throw 'Response code: '+req.Status();
+                if (req.getStatus() != 204) {
+                    throw 'Response code: '+req.getStatus();
                 }
              
             } catch (error) {
-                Zabbix.Log(4, 'OneView api error: '+error);
+                Zabbix.log(4, 'OneView api error: '+error);
                 result = {
                     failed: error
                 };
@@ -177,14 +177,14 @@ zabbix_export:
           params: |
             try {
                 var result = [],
-                req = new CurlHttpRequest(),resp;
+                req = new HttpRequest(),resp;
                 req.AddHeader('content-type: application/json');
                 req.AddHeader('x-api-version: 3000');
             
                 //GET Token
-                resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
-                if (req.Status() != 200) {
-                    throw 'Response code: '+req.Status();
+                resp = req.post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
+                if (req.getStatus() != 200) {
+                    throw 'Response code: '+req.getStatus();
                 }
                 resp = JSON.parse(resp);
                 token = resp.sessionID;
@@ -192,8 +192,8 @@ zabbix_export:
                 //GET Logical Enclosures
                 req.AddHeader('auth: '+token);
                 resp = req.Get('https://{$ONEVIEW_HOST}/rest/logical-enclosures');
-                if (req.Status() != 200) {
-                    throw 'Response code: '+req.Status();
+                if (req.getStatus() != 200) {
+                    throw 'Response code: '+req.getStatus();
                 }
                 resp = JSON.parse(resp);
                 result = resp.members.map(function(m) {
@@ -205,12 +205,12 @@ zabbix_export:
             
                 //DELETE token
                 resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
-                if (req.Status() != 204) {
-                    throw 'Response code: '+req.Status();
+                if (req.getStatus() != 204) {
+                    throw 'Response code: '+req.getStatus();
                 }
              
             } catch (error) {
-                Zabbix.Log(4, 'OneView api error: '+error);
+                Zabbix.log(4, 'OneView api error: '+error);
                 result = {
                     failed: error
                 };
@@ -239,15 +239,15 @@ zabbix_export:
           params: |
             try {
                 var result = [],
-                req = new CurlHttpRequest(),
+                req = new HttpRequest(),
                 resp;
                 req.AddHeader('content-type: application/json');
                 req.AddHeader('x-api-version: 3000');
             
                 //GET Token
-                resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
-                if (req.Status() != 200) {
-                    throw 'Response code: '+req.Status();
+                resp = req.post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
+                if (req.getStatus() != 200) {
+                    throw 'Response code: '+req.getStatus();
                 }
                 resp = JSON.parse(resp);
                 token = resp.sessionID;
@@ -255,8 +255,8 @@ zabbix_export:
                 //GET Servers
                 req.AddHeader('auth: '+token);
                 resp = req.Get('https://{$ONEVIEW_HOST}/rest/server-hardware');
-                if (req.Status() != 200) {
-                    throw 'Response code: '+req.Status();
+                if (req.getStatus() != 200) {
+                    throw 'Response code: '+req.getStatus();
                 }
                 resp = JSON.parse(resp);
                 result = resp.members.map(function(m) {
@@ -269,12 +269,12 @@ zabbix_export:
             
                 //DELETE token
                 resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
-                if (req.Status() != 204) {
-                    throw 'Response code: '+req.Status();
+                if (req.getStatus() != 204) {
+                    throw 'Response code: '+req.getStatus();
                 }
              
             } catch (error) {
-                Zabbix.Log(4, 'OneView api error: '+error);
+                Zabbix.log(4, 'OneView api error: '+error);
                 result = {
                     failed: error
                 };
@@ -616,15 +616,15 @@ zabbix_export:
           params: |
             try {
                 var result = [],
-                req = new CurlHttpRequest(),
+                req = new HttpRequest(),
                 resp;
                 req.AddHeader('content-type: application/json');
                 req.AddHeader('x-api-version: 3000');
             
                 //GET Token
-                resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
-                if (req.Status() != 200) {
-                    throw 'Response code: '+req.Status();
+                resp = req.post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
+                if (req.getStatus() != 200) {
+                    throw 'Response code: '+req.getStatus();
                 }
                 resp = JSON.parse(resp);
                 token = resp.sessionID;
@@ -632,19 +632,19 @@ zabbix_export:
                 //GET Enclosure
                 req.AddHeader('auth: '+token);
                 resp = req.Get('https://{$ONEVIEW_HOST}/{$ENCLOSURE_URI}');
-                if (req.Status() != 200) {
-                    throw 'Response code: '+req.Status();
+                if (req.getStatus() != 200) {
+                    throw 'Response code: '+req.getStatus();
                 }
                 result = JSON.parse(resp);
             
                 //DELETE token
                 resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
-                if (req.Status() != 204) {
-                    throw 'Response code: '+req.Status();
+                if (req.getStatus() != 204) {
+                    throw 'Response code: '+req.getStatus();
                 }
              
             } catch (error) {
-                Zabbix.Log(4, 'OneView api error: '+error);
+                Zabbix.log(4, 'OneView api error: '+error);
                 result = {
                     failed: error
                 };
@@ -833,15 +833,15 @@ zabbix_export:
               params: |
                 try {
                     var result = [],
-                    req = new CurlHttpRequest(),
+                    req = new HttpRequest(),
                     resp;
                     req.AddHeader('content-type: application/json');
                     req.AddHeader('x-api-version: 3000');
                 
                     //GET Token
-                    resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
-                    if (req.Status() != 200) {
-                        throw 'Response code: '+req.Status();
+                    resp = req.post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
+                    if (req.getStatus() != 200) {
+                        throw 'Response code: '+req.getStatus();
                     }
                     resp = JSON.parse(resp);
                     token = resp.sessionID;
@@ -849,19 +849,19 @@ zabbix_export:
                     //GET Enclosure
                     req.AddHeader('auth: '+token);
                     resp = req.Get('https://{$ONEVIEW_HOST}/{#ENCLOSURE_INTERCONNECT_URI}');
-                    if (req.Status() != 200) {
-                        throw 'Response code: '+req.Status();
+                    if (req.getStatus() != 200) {
+                        throw 'Response code: '+req.getStatus();
                     }
                     result = JSON.parse(resp);
                 
                     //DELETE token
                     resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
-                    if (req.Status() != 204) {
-                        throw 'Response code: '+req.Status();
+                    if (req.getStatus() != 204) {
+                        throw 'Response code: '+req.getStatus();
                     }
                  
                 } catch (error) {
-                    Zabbix.Log(4, 'OneView api error: '+error);
+                    Zabbix.log(4, 'OneView api error: '+error);
                     result = {
                         failed: error
                     };
@@ -894,15 +894,15 @@ zabbix_export:
               params: |
                 try {
                     var result = [],
-                    req = new CurlHttpRequest(),
+                    req = new HttpRequest(),
                     resp;
                     req.AddHeader('content-type: application/json');
                     req.AddHeader('x-api-version: 3000');
                 
                     //GET Token
-                    resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
-                    if (req.Status() != 200) {
-                        throw 'Response code: '+req.Status();
+                    resp = req.post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
+                    if (req.getStatus() != 200) {
+                        throw 'Response code: '+req.getStatus();
                     }
                     resp = JSON.parse(resp);
                     token = resp.sessionID;
@@ -910,19 +910,19 @@ zabbix_export:
                     //GET Enclosure
                     req.AddHeader('auth: '+token);
                     resp = req.Get('https://{$ONEVIEW_HOST}/{#ENCLOSURE_INTERCONNECT_URI}');
-                    if (req.Status() != 200) {
-                        throw 'Response code: '+req.Status();
+                    if (req.getStatus() != 200) {
+                        throw 'Response code: '+req.getStatus();
                     }
                     result = JSON.parse(resp);
                 
                     //DELETE token
                     resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
-                    if (req.Status() != 204) {
-                        throw 'Response code: '+req.Status();
+                    if (req.getStatus() != 204) {
+                        throw 'Response code: '+req.getStatus();
                     }
                  
                 } catch (error) {
-                    Zabbix.Log(4, 'OneView api error: '+error);
+                    Zabbix.log(4, 'OneView api error: '+error);
                     result = {
                         failed: error
                     };
@@ -955,15 +955,15 @@ zabbix_export:
               params: |
                 try {
                     var result = [],
-                    req = new CurlHttpRequest(),
+                    req = new HttpRequest(),
                     resp;
                     req.AddHeader('content-type: application/json');
                     req.AddHeader('x-api-version: 3000');
                 
                     //GET Token
-                    resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
-                    if (req.Status() != 200) {
-                        throw 'Response code: '+req.Status();
+                    resp = req.post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
+                    if (req.getStatus() != 200) {
+                        throw 'Response code: '+req.getStatus();
                     }
                     resp = JSON.parse(resp);
                     token = resp.sessionID;
@@ -971,19 +971,19 @@ zabbix_export:
                     //GET Enclosure
                     req.AddHeader('auth: '+token);
                     resp = req.Get('https://{$ONEVIEW_HOST}/{#ENCLOSURE_INTERCONNECT_URI}');
-                    if (req.Status() != 200) {
-                        throw 'Response code: '+req.Status();
+                    if (req.getStatus() != 200) {
+                        throw 'Response code: '+req.getStatus();
                     }
                     result = JSON.parse(resp);
                 
                     //DELETE token
                     resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
-                    if (req.Status() != 204) {
-                        throw 'Response code: '+req.Status();
+                    if (req.getStatus() != 204) {
+                        throw 'Response code: '+req.getStatus();
                     }
                  
                 } catch (error) {
-                    Zabbix.Log(4, 'OneView api error: '+error);
+                    Zabbix.log(4, 'OneView api error: '+error);
                     result = {
                         failed: error
                     };
@@ -1016,15 +1016,15 @@ zabbix_export:
               params: |
                 try {
                     var result = [],
-                    req = new CurlHttpRequest(),
+                    req = new HttpRequest(),
                     resp;
                     req.AddHeader('content-type: application/json');
                     req.AddHeader('x-api-version: 3000');
                 
                     //GET Token
-                    resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
-                    if (req.Status() != 200) {
-                        throw 'Response code: '+req.Status();
+                    resp = req.post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
+                    if (req.getStatus() != 200) {
+                        throw 'Response code: '+req.getStatus();
                     }
                     resp = JSON.parse(resp);
                     token = resp.sessionID;
@@ -1032,19 +1032,19 @@ zabbix_export:
                     //GET Enclosure
                     req.AddHeader('auth: '+token);
                     resp = req.Get('https://{$ONEVIEW_HOST}/{#ENCLOSURE_INTERCONNECT_URI}');
-                    if (req.Status() != 200) {
-                        throw 'Response code: '+req.Status();
+                    if (req.getStatus() != 200) {
+                        throw 'Response code: '+req.getStatus();
                     }
                     result = JSON.parse(resp);
                 
                     //DELETE token
                     resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
-                    if (req.Status() != 204) {
-                        throw 'Response code: '+req.Status();
+                    if (req.getStatus() != 204) {
+                        throw 'Response code: '+req.getStatus();
                     }
                  
                 } catch (error) {
-                    Zabbix.Log(4, 'OneView api error: '+error);
+                    Zabbix.log(4, 'OneView api error: '+error);
                     result = {
                         failed: error
                     };
@@ -1255,15 +1255,15 @@ zabbix_export:
           params: |
             try {
                 var result = [],
-                req = new CurlHttpRequest(),
+                req = new HttpRequest(),
                 resp;
                 req.AddHeader('content-type: application/json');
                 req.AddHeader('x-api-version: 3000');
             
                 //GET Token
-                resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
-                if (req.Status() != 200) {
-                    throw 'Response code: '+req.Status();
+                resp = req.post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
+                if (req.getStatus() != 200) {
+                    throw 'Response code: '+req.getStatus();
                 }
                 resp = JSON.parse(resp);
                 token = resp.sessionID;
@@ -1271,19 +1271,19 @@ zabbix_export:
                 //GET Enclosure
                 req.AddHeader('auth: '+token);
                 resp = req.Get('https://{$ONEVIEW_HOST}/{$LOGICAL_ENCLOSURE_URI}');
-                if (req.Status() != 200) {
-                    throw 'Response code: '+req.Status();
+                if (req.getStatus() != 200) {
+                    throw 'Response code: '+req.getStatus();
                 }
                 result = JSON.parse(resp);
             
                 //DELETE token
                 resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
-                if (req.Status() != 204) {
-                    throw 'Response code: '+req.Status();
+                if (req.getStatus() != 204) {
+                    throw 'Response code: '+req.getStatus();
                 }
              
             } catch (error) {
-                Zabbix.Log(4, 'OneView api error: '+error);
+                Zabbix.log(4, 'OneView api error: '+error);
                 result = {
                     failed: error
                 };
@@ -1344,15 +1344,15 @@ zabbix_export:
           params: |
             try {
                 var result = [],
-                req = new CurlHttpRequest(),
+                req = new HttpRequest(),
                 resp;
                 req.AddHeader('content-type: application/json');
                 req.AddHeader('x-api-version: 3000');
             
                 //GET Token
-                resp = req.Post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
-                if (req.Status() != 200) {
-                    throw 'Response code: '+req.Status();
+                resp = req.post('https://{$ONEVIEW_HOST}/rest/login-sessions',value);
+                if (req.getStatus() != 200) {
+                    throw 'Response code: '+req.getStatus();
                 }
                 resp = JSON.parse(resp);
                 token = resp.sessionID;
@@ -1360,19 +1360,19 @@ zabbix_export:
                 //GET Server
                 req.AddHeader('auth: '+token);
                 resp = req.Get('https://{$ONEVIEW_HOST}/{$SERVER_URI}');
-                if (req.Status() != 200) {
-                    throw 'Response code: '+req.Status();
+                if (req.getStatus() != 200) {
+                    throw 'Response code: '+req.getStatus();
                 }
                 result = JSON.parse(resp);
             
                 //DELETE token
                 resp = req.Delete('https://{$ONEVIEW_HOST}/rest/login-sessions');
-                if (req.Status() != 204) {
-                    throw 'Response code: '+req.Status();
+                if (req.getStatus() != 204) {
+                    throw 'Response code: '+req.getStatus();
                 }
              
             } catch (error) {
-                Zabbix.Log(4, 'OneView api error: '+error);
+                Zabbix.log(4, 'OneView api error: '+error);
                 result = {
                     failed: error
                 };

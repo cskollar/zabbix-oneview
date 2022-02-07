@@ -70,7 +70,7 @@ Hosts (enclosures, logical enclosures and servers) are created dynamically by ho
 
 - interconnect traffic metrics with graphs (perhaps possible)
 - SAN/storage discovery
-- tags & applications support
+- tags
 - Zabbix 6.0 support
 
 ...PRs are welcomed!
